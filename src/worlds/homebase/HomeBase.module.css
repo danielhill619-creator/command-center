@@ -1,4 +1,8 @@
-/* Home Base — Sci-Fi Space Station */
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOME BASE — SCI-FI SPACE STATION COMMAND CENTER
+   Background layers → screen overlays → HUD chrome → content
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .container {
   min-height: 100vh;
   background-color: #000008;
@@ -10,58 +14,240 @@
   flex-direction: column;
 }
 
-/* Star field */
-.stars {
+/* ── STAR LAYER: FAR — tiny, dim, 30 stars, slow drift ──────────────────── */
+.starsFar {
   position: fixed;
   inset: 0;
   background-image:
-    radial-gradient(1px 1px at 10% 15%, #ffffff 0%, transparent 100%),
-    radial-gradient(1px 1px at 25% 40%, #ffffff 0%, transparent 100%),
-    radial-gradient(1px 1px at 40% 70%, #00c8ff 0%, transparent 100%),
-    radial-gradient(1px 1px at 60% 20%, #ffffff 0%, transparent 100%),
-    radial-gradient(1px 1px at 75% 55%, #00c8ff 0%, transparent 100%),
-    radial-gradient(1px 1px at 85% 80%, #ffffff 0%, transparent 100%),
-    radial-gradient(1px 1px at 5%  85%, #ffffff 0%, transparent 100%),
-    radial-gradient(2px 2px at 90% 10%, #00c8ff 0%, transparent 100%),
-    radial-gradient(2px 2px at 30% 90%, #ffffff 0%, transparent 100%),
-    radial-gradient(1px 1px at 55% 35%, #00c8ff 0%, transparent 100%),
-    radial-gradient(1px 1px at 18% 62%, #ffffff 0%, transparent 100%),
-    radial-gradient(1px 1px at 72% 8%,  #00c8ff 0%, transparent 100%);
-  background-size: 500px 400px;
-  animation: drift 80s linear infinite;
+    radial-gradient(1px 1px at  2% 12%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at  7% 55%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 11% 37%, rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 14% 79%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 19%  6%, rgba(255,255,255,0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 88%, rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 28% 22%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 31%  9%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 41%, rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 38% 77%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 43%  8%, rgba(255,255,255,0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 46% 95%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 49% 44%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 51% 61%, rgba(255,255,255,0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 53% 24%, rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 57% 16%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 62% 93%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 48%, rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 67% 82%, rgba(255,255,255,0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 31%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 74% 66%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 77% 83%, rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 79% 35%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 83% 45%, rgba(255,255,255,0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 86% 73%, rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 88% 14%, rgba(255,255,255,0.55) 0%, transparent 100%),
+    radial-gradient(1px 1px at 92% 27%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1px 1px at 95% 52%, rgba(255,255,255,0.50) 0%, transparent 100%),
+    radial-gradient(1px 1px at 96% 91%, rgba(255,255,255,0.40) 0%, transparent 100%),
+    radial-gradient(1px 1px at 99% 68%, rgba(255,255,255,0.55) 0%, transparent 100%);
+  background-size: 900px 700px;
+  animation: driftFar 200s linear infinite;
   pointer-events: none;
   z-index: 0;
 }
 
-@keyframes drift {
-  from { background-position: 0 0; }
-  to   { background-position: -500px -400px; }
+/* ── STAR LAYER: MID — medium brightness, 20 stars ──────────────────────── */
+.starsMid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at  8% 25%, rgba(255,255,255,0.80) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 71%, rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(2px 2px at 23% 48%, rgba(255,255,255,0.80) 0%, transparent 100%),
+    radial-gradient(1px 1px at 29% 88%, rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(2px 2px at 37% 14%, rgba(255,255,255,0.85) 0%, transparent 100%),
+    radial-gradient(1px 1px at 44% 62%, rgba(255,255,255,0.70) 0%, transparent 100%),
+    radial-gradient(2px 2px at 52%  3%, rgba(255,255,255,0.85) 0%, transparent 100%),
+    radial-gradient(1px 1px at 58% 75%, rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(2px 2px at 63% 29%, rgba(255,255,255,0.85) 0%, transparent 100%),
+    radial-gradient(1px 1px at 69% 54%, rgba(255,255,255,0.70) 0%, transparent 100%),
+    radial-gradient(2px 2px at 76% 87%, rgba(255,255,255,0.80) 0%, transparent 100%),
+    radial-gradient(1px 1px at 82% 17%, rgba(255,255,255,0.85) 0%, transparent 100%),
+    radial-gradient(2px 2px at 89% 42%, rgba(255,255,255,0.75) 0%, transparent 100%),
+    radial-gradient(1px 1px at 94% 66%, rgba(255,255,255,0.80) 0%, transparent 100%),
+    radial-gradient(2px 2px at 98% 11%, rgba(255,255,255,0.85) 0%, transparent 100%),
+    /* cyan accents */
+    radial-gradient(2px 2px at 18% 39%, rgba(0,200,255,0.70) 0%, transparent 100%),
+    radial-gradient(1px 1px at 41% 81%, rgba(0,200,255,0.65) 0%, transparent 100%),
+    radial-gradient(2px 2px at 71% 22%, rgba(0,200,255,0.75) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 58%, rgba(0,200,255,0.65) 0%, transparent 100%),
+    radial-gradient(2px 2px at 55% 96%, rgba(0,200,255,0.70) 0%, transparent 100%);
+  background-size: 600px 500px;
+  animation: driftMid 100s linear infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Header */
+/* ── STAR LAYER: NEAR — large, bright, few, some with glow ─────────────── */
+.starsNear {
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 12% 38%, rgba(255,255,255,1.00) 0%, transparent 100%),
+    radial-gradient(3px 3px at 27% 72%, rgba(255,255,255,0.95) 0%, transparent 100%),
+    radial-gradient(2px 2px at 45%  9%, rgba(255,255,255,1.00) 0%, transparent 100%),
+    radial-gradient(3px 3px at 63% 55%, rgba(255,255,255,0.95) 0%, transparent 100%),
+    radial-gradient(2px 2px at 82% 23%, rgba(255,255,255,1.00) 0%, transparent 100%),
+    radial-gradient(3px 3px at 91% 84%, rgba(255,255,255,0.95) 0%, transparent 100%),
+    radial-gradient(2px 2px at 34% 91%, rgba(255,255,255,1.00) 0%, transparent 100%),
+    radial-gradient(3px 3px at 58% 33%, rgba(255,255,255,0.95) 0%, transparent 100%),
+    /* glowing cyan stars */
+    radial-gradient(3px 3px at 19% 61%, rgba(0,200,255,1.00) 0%, transparent 100%),
+    radial-gradient(4px 4px at 73%  8%, rgba(0,200,255,1.00) 0%, transparent 100%),
+    radial-gradient(3px 3px at 88% 47%, rgba(0,200,255,0.95) 0%, transparent 100%),
+    radial-gradient(4px 4px at 48% 78%, rgba(0,200,255,1.00) 0%, transparent 100%);
+  background-size: 400px 300px;
+  animation: driftNear 50s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── NEBULA — soft deep-blue atmosphere ─────────────────────────────────── */
+.nebula {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 15% 65%, rgba(0, 50,130,0.14) 0%, transparent 100%),
+    radial-gradient(ellipse 60% 40% at 85% 25%, rgba(0, 30, 90,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 60% at 50% 85%, rgba(0, 60,150,0.08) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 30% at 70% 50%, rgba(0, 20, 80,0.06) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── TACTICAL GRID — faint HUD overlay ──────────────────────────────────── */
+.grid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.028) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── SWEEP — radar scan line ─────────────────────────────────────────────── */
+.sweep {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0,200,255,0.08) 15%,
+    rgba(0,200,255,0.55) 40%,
+    rgba(0,200,255,0.85) 50%,
+    rgba(0,200,255,0.55) 60%,
+    rgba(0,200,255,0.08) 85%,
+    transparent 100%
+  );
+  box-shadow: 0 0 14px 2px rgba(0,200,255,0.35);
+  pointer-events: none;
+  z-index: 2;
+  top: -2px;
+  animation: sweepDown 18s linear infinite;
+}
+
+/* ── VIGNETTE — edge darkening + blue ambient glow ──────────────────────── */
+.vignette {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 35%, rgba(0,0,12,0.80) 100%),
+    radial-gradient(ellipse 130% 18% at 50%   0%, rgba(0,200,255,0.07) 0%, transparent 100%),
+    radial-gradient(ellipse 130% 18% at 50% 100%, rgba(0, 80,200,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse  18% 100% at   0% 50%, rgba(0,120,255,0.06) 0%, transparent 100%),
+    radial-gradient(ellipse  18% 100% at 100% 50%, rgba(0,120,255,0.06) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* ── SCANLINES — subtle CRT screen texture ──────────────────────────────── */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.07) 3px,
+    rgba(0,0,0,0.07) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* ── ANIMATIONS ──────────────────────────────────────────────────────────── */
+@keyframes driftFar  { from { background-position: 0 0; } to { background-position: -900px -700px; } }
+@keyframes driftMid  { from { background-position: 0 0; } to { background-position: -600px -500px; } }
+@keyframes driftNear { from { background-position: 0 0; } to { background-position: -400px -300px; } }
+
+@keyframes sweepDown {
+  0%   { top:  -2px;  opacity: 0;   }
+  3%   {               opacity: 0.9; }
+  92%  {               opacity: 0.4; }
+  100% { top: 100vh;  opacity: 0;   }
+}
+
+@keyframes pulse {
+  0%,100% { opacity: 1;   box-shadow: 0 0 8px  rgba(0,255,136,0.9); }
+  50%      { opacity: 0.3; box-shadow: 0 0 2px  rgba(0,255,136,0.3); }
+}
+
+@keyframes blink {
+  0%,49% { opacity: 1; }
+  50%,100% { opacity: 0; }
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────────────── */
 .header {
   position: relative;
   z-index: 10;
   display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(0,200,255,0.5);
+  background: rgba(4,14,38,0.97);
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  box-shadow: 0 2px 32px rgba(0,200,255,0.10);
+}
+
+.headerMain {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 28px;
-  border-bottom: 1px solid rgba(0,200,255,0.5);
-  background: rgba(5, 18, 45, 0.95);
-  backdrop-filter: blur(10px);
-  flex-shrink: 0;
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  min-width: 220px;
 }
 
 .logoIcon {
-  font-size: 18px;
+  font-size: 22px;
   color: #00c8ff;
-  filter: drop-shadow(0 0 8px #00c8ff);
+  filter: drop-shadow(0 0 10px #00c8ff) drop-shadow(0 0 20px rgba(0,200,255,0.5));
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.logoBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .logoText {
@@ -70,12 +256,63 @@
   font-weight: 700;
   letter-spacing: 4px;
   color: #ffffff;
+  text-shadow: 0 0 20px rgba(0,200,255,0.4);
 }
 
+.logoSub {
+  font-family: 'Orbitron', monospace;
+  font-size: 7px;
+  letter-spacing: 2.5px;
+  color: rgba(0,200,255,0.5);
+}
+
+/* Header center — status display */
+.headerCenter {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  justify-content: center;
+}
+
+.hDivider {
+  flex: 1;
+  max-width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,200,255,0.35), transparent);
+}
+
+.statusGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pulseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 10px rgba(0,255,136,0.9), 0 0 20px rgba(0,255,136,0.4);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.statusLabel {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  color: rgba(0,255,136,0.75);
+  text-shadow: 0 0 10px rgba(0,255,136,0.4);
+}
+
+/* Header right */
 .headerRight {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 220px;
+  justify-content: flex-end;
 }
 
 .sheetStatus {
@@ -91,44 +328,71 @@
   font-size: 8px;
   letter-spacing: 2px;
   color: #ffcc00;
+  animation: blink 1s step-end infinite;
 }
 
 .userEmail {
   font-size: 11px;
-  color: rgba(0,200,255,0.9);
-  letter-spacing: 0.5px;
+  color: rgba(0,200,255,0.7);
+  letter-spacing: 0.3px;
 }
 
 .signOutBtn {
-  font-family: inherit;
-  font-size: 10px;
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
   letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #00c8ff;
+  color: rgba(0,200,255,0.7);
   background: transparent;
-  border: 1px solid rgba(0,200,255,0.6);
-  border-radius: 2px;
+  border: 1px solid rgba(0,200,255,0.3);
   padding: 5px 12px;
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .signOutBtn:hover {
-  color: #ffffff;
-  border-color: #00c8ff;
-  background: rgba(0,200,255,0.15);
+  color: #fff;
+  border-color: rgba(0,200,255,0.8);
+  background: rgba(0,200,255,0.1);
+  box-shadow: 0 0 12px rgba(0,200,255,0.2);
 }
 
-/* Stats bar */
+/* ── TELEMETRY STRIP ─────────────────────────────────────────────────────── */
+.telemetry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 28px;
+  border-top: 1px solid rgba(0,200,255,0.08);
+  background: rgba(0,5,20,0.6);
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: rgba(0,200,255,0.4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.telemetry::-webkit-scrollbar { display: none; }
+
+.telDivider {
+  color: rgba(0,200,255,0.18);
+}
+
+.telClock {
+  color: rgba(0,200,255,0.65);
+  font-variant-numeric: tabular-nums;
+  min-width: 80px;
+}
+
+/* ── STATS BAR ───────────────────────────────────────────────────────────── */
 .statsBar {
   position: relative;
   z-index: 5;
   padding: 0 28px;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(0,200,255,0.25);
+  border-bottom: 1px solid rgba(0,200,255,0.2);
+  background: rgba(2,10,28,0.85);
 }
 
-/* Main content */
+/* ── MAIN CONTENT ────────────────────────────────────────────────────────── */
 .main {
   position: relative;
   z-index: 1;
@@ -136,10 +400,36 @@
   padding: 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
 }
 
-/* Top row */
+/* ── HUD FRAME — corner brackets around dashboard ───────────────────────── */
+.hudFrame {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 12px;
+}
+
+.cornerTL,
+.cornerTR,
+.cornerBL,
+.cornerBR {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(0,200,255,0.50);
+  border-style: solid;
+  pointer-events: none;
+  z-index: 10;
+}
+.cornerTL { top: 0;  left: 0;  border-width: 2px 0 0 2px; }
+.cornerTR { top: 0;  right: 0; border-width: 2px 2px 0 0; }
+.cornerBL { bottom: 0; left: 0;  border-width: 0 0 2px 2px; }
+.cornerBR { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+/* ── TOP ROW ─────────────────────────────────────────────────────────────── */
 .topRow {
   display: grid;
   grid-template-columns: 220px 200px 1fr;
@@ -147,7 +437,7 @@
   align-items: stretch;
 }
 
-/* Middle row */
+/* ── MIDDLE ROW ──────────────────────────────────────────────────────────── */
 .midRow {
   display: grid;
   grid-template-columns: 1fr 420px;
@@ -164,13 +454,25 @@
   flex-direction: column;
 }
 
-/* Portal section */
+/* ── PORTAL SECTION ──────────────────────────────────────────────────────── */
 .portalSectionLabel {
   font-family: 'Orbitron', monospace;
   font-size: 9px;
   letter-spacing: 3px;
-  color: rgba(0,200,255,0.8);
+  color: rgba(0,200,255,0.6);
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.portalLabelLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,200,255,0.3));
+}
+.portalLabelLine:first-child {
+  background: linear-gradient(270deg, transparent, rgba(0,200,255,0.3));
 }
 
 .portalGrid {
@@ -180,60 +482,113 @@
   flex: 1;
 }
 
+/* ── PORTAL CARDS ────────────────────────────────────────────────────────── */
 .portalCard {
   position: relative;
-  background: rgba(10, 28, 70, 0.95);
-  border: 1px solid color-mix(in srgb, var(--portal-color) 60%, transparent);
-  border-radius: 4px;
-  padding: 20px 8px;
+  background: rgba(10,28,70,0.95);
+  border: 1px solid color-mix(in srgb, var(--portal-color) 45%, transparent);
+  border-radius: 0;
+  padding: 22px 8px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   cursor: pointer;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s, background 0.25s;
   font-family: inherit;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
 }
 
 .portalCard:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
   border-color: var(--portal-color);
-  box-shadow: 0 6px 28px color-mix(in srgb, var(--portal-color) 45%, transparent);
+  background: rgba(10,28,70,1);
+  box-shadow:
+    0 6px 28px color-mix(in srgb, var(--portal-color) 40%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--portal-color) 30%, transparent);
 }
 
-.portalCard:hover .portalGlow { opacity: 1; }
+.portalCard:hover .portalGlow     { opacity: 1; }
+.portalCard:hover .portalScanline { opacity: 1; }
+
+/* Corner clips drawn via small absolutely-positioned divs */
+.portalCornerTL,
+.portalCornerBR {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--portal-color);
+  border-style: solid;
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.portalCornerTL { top: 0;  left: 0;  border-width: 1px 0 0 1px; }
+.portalCornerBR { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+
+.portalCard:hover .portalCornerTL,
+.portalCard:hover .portalCornerBR {
+  opacity: 1;
+}
 
 .portalIcon {
-  font-size: 24px;
+  font-size: 26px;
   color: var(--portal-color);
-  filter: drop-shadow(0 0 8px var(--portal-color));
+  filter: drop-shadow(0 0 10px var(--portal-color)) drop-shadow(0 0 4px var(--portal-color));
   line-height: 1;
+  transition: filter 0.2s;
+}
+.portalCard:hover .portalIcon {
+  filter: drop-shadow(0 0 16px var(--portal-color)) drop-shadow(0 0 8px var(--portal-color));
 }
 
 .portalLabel {
   font-family: 'Orbitron', monospace;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #ffffff;
+  text-shadow: 0 0 8px rgba(255,255,255,0.3);
 }
 
+/* Radial glow from bottom */
 .portalGlow {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    ellipse at 50% 100%,
-    color-mix(in srgb, var(--portal-color) 20%, transparent) 0%,
-    transparent 70%
+    ellipse at 50% 110%,
+    color-mix(in srgb, var(--portal-color) 25%, transparent) 0%,
+    transparent 65%
   );
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.3s;
   pointer-events: none;
 }
 
-/* Responsive */
+/* Animated scan line that sweeps on hover */
+.portalScanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--portal-color), transparent);
+  opacity: 0;
+  top: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  animation: portalSweep 2s linear infinite;
+}
+
+@keyframes portalSweep {
+  0%   { top: 0%;   opacity: 0;   }
+  5%   {             opacity: 0.6; }
+  95%  {             opacity: 0.3; }
+  100% { top: 100%; opacity: 0;   }
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .topRow {
     grid-template-columns: 1fr 1fr;
@@ -258,5 +613,8 @@
   }
   .topRow > :last-child {
     grid-column: span 1;
+  }
+  .headerCenter {
+    display: none;
   }
 }
