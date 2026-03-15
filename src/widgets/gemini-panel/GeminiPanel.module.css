@@ -1,0 +1,60 @@
+.widget {
+  background: rgba(10, 28, 70, 0.95);
+  border: 1px solid rgba(0, 200, 255, 0.55);
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon {
+  font-size: 16px;
+  color: #00c8ff;
+  filter: drop-shadow(0 0 8px #00c8ff);
+}
+
+.label {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #00c8ff;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed rgba(0, 200, 255, 0.35);
+  border-radius: 2px;
+  padding: 20px;
+}
+
+.placeholder {
+  font-family: 'Exo 2', system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  max-width: 360px;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(255, 100, 100, 0.75);
+}

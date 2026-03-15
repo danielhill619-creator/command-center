@@ -1,0 +1,125 @@
+.widget {
+  background: rgba(10, 28, 70, 0.95);
+  border: 1px solid rgba(0, 200, 255, 0.55);
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 200px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #00c8ff;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 1);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.live {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #00ff88;
+}
+
+.scroll {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+  text-decoration: none;
+  transition: background 0.15s;
+  border-radius: 2px;
+  padding: 6px 4px;
+}
+
+.item:hover {
+  background: rgba(0, 200, 255, 0.1);
+}
+
+.thumb {
+  width: 56px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 200, 255, 0.2);
+}
+
+.thumbPlaceholder {
+  width: 56px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: rgba(0, 200, 255, 0.06);
+  border: 1px solid rgba(0, 200, 255, 0.12);
+}
+
+.itemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ticker {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  color: #00c8ff;
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: 'Exo 2', system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+  transition: color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item:hover .title {
+  color: #ffffff;
+}
+
+.status {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(0, 200, 255, 0.7);
+  text-align: center;
+  padding: 20px 0;
+}

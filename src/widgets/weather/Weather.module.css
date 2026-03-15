@@ -1,0 +1,104 @@
+.widget {
+  background: rgba(10, 28, 70, 0.95);
+  border: 1px solid rgba(0, 200, 255, 0.55);
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: 'Orbitron', monospace;
+}
+
+.label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #00c8ff;
+  margin-bottom: 4px;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.temp {
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.city {
+  font-family: 'Exo 2', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.desc {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #00c8ff;
+  margin-bottom: 4px;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(0, 200, 255, 0.35);
+  margin: 4px 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.key {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(0, 200, 255, 0.8);
+}
+
+.val {
+  font-family: 'Exo 2', system-ui, sans-serif;
+  font-size: 12px;
+  color: #ffffff;
+}
+
+.status {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(0, 200, 255, 0.7);
+  text-align: center;
+  padding: 20px 0;
+}
+
+.noKey {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+}
+
+.noKeyIcon {
+  font-size: 24px;
+  color: rgba(0, 200, 255, 0.6);
+}
+
+.noKeyText {
+  font-family: 'Exo 2', system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}

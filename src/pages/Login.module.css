@@ -1,0 +1,142 @@
+/* Login — Space Station Entry Gate */
+.container {
+  min-height: 100vh;
+  background-color: #000008;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Exo 2', 'Orbitron', system-ui, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated star field */
+.stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(0, 200, 255, 0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 40%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 70%, rgba(0, 200, 255, 0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 20%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 55%, rgba(0, 200, 255, 0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 80%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 5% 85%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 50%, rgba(0, 200, 255, 0.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 90% 10%, rgba(0, 200, 255, 0.8) 0%, transparent 100%),
+    radial-gradient(2px 2px at 30% 90%, rgba(255, 255, 255, 0.7) 0%, transparent 100%);
+  background-size: 400px 300px;
+  animation: drift 60s linear infinite;
+}
+
+@keyframes drift {
+  from { background-position: 0 0; }
+  to   { background-position: -400px -300px; }
+}
+
+/* Login panel */
+.panel {
+  position: relative;
+  z-index: 1;
+  background: rgba(5, 10, 20, 0.85);
+  border: 1px solid rgba(0, 200, 255, 0.3);
+  border-radius: 4px;
+  padding: 48px 56px;
+  min-width: 380px;
+  text-align: center;
+  box-shadow:
+    0 0 40px rgba(0, 200, 255, 0.08),
+    0 0 80px rgba(0, 200, 255, 0.04),
+    inset 0 1px 0 rgba(0, 200, 255, 0.15);
+}
+
+.logo {
+  margin-bottom: 24px;
+}
+
+.logoIcon {
+  display: block;
+  font-size: 48px;
+  color: #00c8ff;
+  filter: drop-shadow(0 0 12px rgba(0, 200, 255, 0.8));
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.title {
+  font-family: 'Orbitron', 'Exo 2', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #e0f4ff;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: rgba(0, 200, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 200, 255, 0.4),
+    transparent
+  );
+  margin: 24px 0;
+}
+
+.prompt {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(0, 200, 255, 0.5);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.signInButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 24px;
+  background: rgba(0, 200, 255, 0.08);
+  border: 1px solid rgba(0, 200, 255, 0.4);
+  border-radius: 2px;
+  color: #e0f4ff;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.signInButton:hover {
+  background: rgba(0, 200, 255, 0.15);
+  border-color: rgba(0, 200, 255, 0.7);
+  box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
+}
+
+.signInButton:active {
+  background: rgba(0, 200, 255, 0.25);
+}
+
+.googleIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.note {
+  margin-top: 20px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+}

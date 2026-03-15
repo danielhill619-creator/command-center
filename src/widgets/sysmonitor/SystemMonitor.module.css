@@ -1,0 +1,65 @@
+.widget {
+  background: rgba(10, 28, 70, 0.95);
+  border: 1px solid rgba(0, 200, 255, 0.55);
+  border-radius: 4px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: 'Orbitron', 'Share Tech Mono', monospace;
+}
+
+.label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #00c8ff;
+  margin-bottom: 4px;
+}
+
+.time {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #00c8ff;
+  text-shadow: 0 0 20px rgba(0, 200, 255, 0.9);
+  line-height: 1;
+}
+
+.date {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Exo 2', system-ui, sans-serif;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(0, 200, 255, 0.35);
+  margin: 6px 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.key {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(0, 200, 255, 0.8);
+}
+
+.val {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.online {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #00ff88;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.9);
+}

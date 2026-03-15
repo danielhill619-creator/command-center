@@ -1,0 +1,64 @@
+/* School World — Cyberpunk */
+.container {
+  min-height: 100vh;
+  background-color: #0d0d1a;
+  background-image:
+    linear-gradient(rgba(255, 0, 160, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 0, 160, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: #e0e0ff;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid rgba(255, 0, 160, 0.2);
+}
+
+.backBtn {
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: rgba(255, 0, 160, 0.6);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.backBtn:hover { color: #ff0090; }
+
+.worldName {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(0, 230, 255, 0.4);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.heading {
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: #ff0090;
+  text-shadow: 0 0 20px rgba(255, 0, 160, 0.5);
+}
+
+.placeholder {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: rgba(0, 230, 255, 0.4);
+}

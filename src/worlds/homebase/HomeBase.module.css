@@ -1,0 +1,262 @@
+/* Home Base — Sci-Fi Space Station */
+.container {
+  min-height: 100vh;
+  background-color: #000008;
+  font-family: 'Exo 2', 'Orbitron', system-ui, sans-serif;
+  color: #ffffff;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Star field */
+.stars {
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, #ffffff 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 40%, #ffffff 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 70%, #00c8ff 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 20%, #ffffff 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 55%, #00c8ff 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 80%, #ffffff 0%, transparent 100%),
+    radial-gradient(1px 1px at 5%  85%, #ffffff 0%, transparent 100%),
+    radial-gradient(2px 2px at 90% 10%, #00c8ff 0%, transparent 100%),
+    radial-gradient(2px 2px at 30% 90%, #ffffff 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 35%, #00c8ff 0%, transparent 100%),
+    radial-gradient(1px 1px at 18% 62%, #ffffff 0%, transparent 100%),
+    radial-gradient(1px 1px at 72% 8%,  #00c8ff 0%, transparent 100%);
+  background-size: 500px 400px;
+  animation: drift 80s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes drift {
+  from { background-position: 0 0; }
+  to   { background-position: -500px -400px; }
+}
+
+/* Header */
+.header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 1px solid rgba(0,200,255,0.5);
+  background: rgba(5, 18, 45, 0.95);
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logoIcon {
+  font-size: 18px;
+  color: #00c8ff;
+  filter: drop-shadow(0 0 8px #00c8ff);
+}
+
+.logoText {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #ffffff;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sheetStatus {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #00ff88;
+  text-shadow: 0 0 8px rgba(0,255,136,0.8);
+}
+
+.sheetStatusOff {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #ffcc00;
+}
+
+.userEmail {
+  font-size: 11px;
+  color: rgba(0,200,255,0.9);
+  letter-spacing: 0.5px;
+}
+
+.signOutBtn {
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #00c8ff;
+  background: transparent;
+  border: 1px solid rgba(0,200,255,0.6);
+  border-radius: 2px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.signOutBtn:hover {
+  color: #ffffff;
+  border-color: #00c8ff;
+  background: rgba(0,200,255,0.15);
+}
+
+/* Stats bar */
+.statsBar {
+  position: relative;
+  z-index: 5;
+  padding: 0 28px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(0,200,255,0.25);
+}
+
+/* Main content */
+.main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Top row */
+.topRow {
+  display: grid;
+  grid-template-columns: 220px 200px 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* Middle row */
+.midRow {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 16px;
+  align-items: stretch;
+  min-height: 260px;
+}
+
+.colNarrow,
+.colWide,
+.colGemini,
+.colPortals {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Portal section */
+.portalSectionLabel {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(0,200,255,0.8);
+  margin-bottom: 12px;
+}
+
+.portalGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  flex: 1;
+}
+
+.portalCard {
+  position: relative;
+  background: rgba(10, 28, 70, 0.95);
+  border: 1px solid color-mix(in srgb, var(--portal-color) 60%, transparent);
+  border-radius: 4px;
+  padding: 20px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  font-family: inherit;
+}
+
+.portalCard:hover {
+  transform: translateY(-3px);
+  border-color: var(--portal-color);
+  box-shadow: 0 6px 28px color-mix(in srgb, var(--portal-color) 45%, transparent);
+}
+
+.portalCard:hover .portalGlow { opacity: 1; }
+
+.portalIcon {
+  font-size: 24px;
+  color: var(--portal-color);
+  filter: drop-shadow(0 0 8px var(--portal-color));
+  line-height: 1;
+}
+
+.portalLabel {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.portalGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 100%,
+    color-mix(in srgb, var(--portal-color) 20%, transparent) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .topRow {
+    grid-template-columns: 1fr 1fr;
+  }
+  .topRow > :last-child {
+    grid-column: span 2;
+  }
+  .midRow {
+    grid-template-columns: 1fr;
+  }
+  .portalGrid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .portalGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .topRow {
+    grid-template-columns: 1fr;
+  }
+  .topRow > :last-child {
+    grid-column: span 1;
+  }
+}

@@ -1,0 +1,59 @@
+/* Work World — Dark Modern Minimalist */
+.container {
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: #e8e8e8;
+  font-family: 'Inter', 'DM Sans', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.backBtn {
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: rgba(0, 150, 255, 0.6);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.backBtn:hover { color: #0096ff; }
+
+.worldName {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.heading {
+  font-size: 32px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.placeholder {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: rgba(0, 150, 255, 0.4);
+}
