@@ -136,27 +136,40 @@
   z-index: 0;
 }
 
-/* ── SWEEP — radar scan line ─────────────────────────────────────────────── */
-.sweep {
-  position: fixed;
+/* ── PANEL WRAP — scan line effect for top widget panels ────────────────── */
+.panelWrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panelScan {
+  position: absolute;
   left: 0;
   right: 0;
   height: 1px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(0,200,255,0.08) 15%,
-    rgba(0,200,255,0.55) 40%,
-    rgba(0,200,255,0.85) 50%,
-    rgba(0,200,255,0.55) 60%,
-    rgba(0,200,255,0.08) 85%,
+    rgba(0,200,255,0.12) 15%,
+    rgba(0,200,255,0.70) 40%,
+    rgba(0,200,255,0.90) 50%,
+    rgba(0,200,255,0.70) 60%,
+    rgba(0,200,255,0.12) 85%,
     transparent 100%
   );
-  box-shadow: 0 0 14px 2px rgba(0,200,255,0.35);
+  box-shadow: 0 0 10px 1px rgba(0,200,255,0.30);
   pointer-events: none;
-  z-index: 2;
-  top: -2px;
-  animation: sweepDown 18s linear infinite;
+  z-index: 10;
+  top: 0;
+  opacity: 0;
+  animation: panelScanAnim 3s linear infinite;
+}
+
+.panelWrap:hover .panelScan {
+  opacity: 1;
 }
 
 /* ── VIGNETTE — edge darkening + blue ambient glow ──────────────────────── */
@@ -193,11 +206,11 @@
 @keyframes driftMid  { from { background-position: 0 0; } to { background-position: -600px -500px; } }
 @keyframes driftNear { from { background-position: 0 0; } to { background-position: -400px -300px; } }
 
-@keyframes sweepDown {
-  0%   { top:  -2px;  opacity: 0;   }
-  3%   {               opacity: 0.9; }
-  92%  {               opacity: 0.4; }
-  100% { top: 100vh;  opacity: 0;   }
+@keyframes panelScanAnim {
+  0%   { top:   0%;  opacity: 0;   }
+  4%   {              opacity: 0.9; }
+  94%  {              opacity: 0.4; }
+  100% { top: 100%;  opacity: 0;   }
 }
 
 @keyframes pulse {

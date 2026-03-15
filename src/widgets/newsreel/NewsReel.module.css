@@ -52,6 +52,16 @@
   gap: 2px;
 }
 
+.scrollExpanded {
+  flex: unset;
+  overflow-y: auto;
+  max-height: 480px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,200,255,0.2) transparent;
+}
+.scrollExpanded::-webkit-scrollbar { width: 4px; }
+.scrollExpanded::-webkit-scrollbar-thumb { background: rgba(0,200,255,0.25); }
+
 .item {
   display: flex;
   align-items: center;
@@ -122,4 +132,22 @@
   color: rgba(0, 200, 255, 0.7);
   text-align: center;
   padding: 20px 0;
+}
+
+.expandBtn {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(0, 200, 255, 0.55);
+  background: transparent;
+  border: none;
+  border-top: 1px solid rgba(0, 200, 255, 0.12);
+  padding: 8px 0 2px;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.expandBtn:hover {
+  color: #00c8ff;
 }

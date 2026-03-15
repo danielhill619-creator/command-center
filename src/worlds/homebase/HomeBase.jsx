@@ -51,7 +51,6 @@ export default function HomeBase() {
       <div className={styles.starsNear} aria-hidden="true" />
       <div className={styles.nebula}    aria-hidden="true" />
       <div className={styles.grid}      aria-hidden="true" />
-      <div className={styles.sweep}     aria-hidden="true" />
 
       {/* ── Screen overlay effects (z-index 100, pointer-events none) ── */}
       <div className={styles.vignette}  aria-hidden="true" />
@@ -121,14 +120,34 @@ export default function HomeBase() {
 
           {/* Top row: System Monitor | Weather | News Reel */}
           <div className={styles.topRow}>
-            <div className={styles.colNarrow}><SystemMonitor /></div>
-            <div className={styles.colNarrow}><Weather /></div>
-            <div className={styles.colWide}><NewsReel /></div>
+            <div className={styles.colNarrow}>
+              <div className={styles.panelWrap}>
+                <SystemMonitor />
+                <div className={styles.panelScan} aria-hidden="true" />
+              </div>
+            </div>
+            <div className={styles.colNarrow}>
+              <div className={styles.panelWrap}>
+                <Weather />
+                <div className={styles.panelScan} aria-hidden="true" />
+              </div>
+            </div>
+            <div className={styles.colWide}>
+              <div className={styles.panelWrap}>
+                <NewsReel />
+                <div className={styles.panelScan} aria-hidden="true" />
+              </div>
+            </div>
           </div>
 
           {/* Middle row: Gemini Briefing | Portal Grid */}
           <div className={styles.midRow}>
-            <div className={styles.colGemini}><GeminiPanel /></div>
+            <div className={styles.colGemini}>
+              <div className={styles.panelWrap}>
+                <GeminiPanel />
+                <div className={styles.panelScan} aria-hidden="true" />
+              </div>
+            </div>
             <div className={styles.colPortals}>
               <div className={styles.portalSectionLabel}>
                 <span className={styles.portalLabelLine} />

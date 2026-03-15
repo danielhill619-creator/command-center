@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import styles from './NewsReel.module.css'
 
-// Free RSS → JSON proxy, no API key required
 const RSS2JSON = 'https://api.rss2json.com/v1/api.json'
 
-// Curated RSS feeds — general + tech headlines
 const FEEDS = [
   'https://feeds.bbci.co.uk/news/rss.xml',
   'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
 ]
+
+const DEFAULT_COUNT = 5
 
 async function fetchFeed(url) {
   const res = await fetch(`${RSS2JSON}?rss_url=${encodeURIComponent(url)}&count=10`)
@@ -25,6 +25,7 @@ export default function NewsReel() {
   const [headlines, setHeadlines] = useState([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState(false)
+  const [expanded, setExpanded]   = useState(false)
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -43,23 +44,25 @@ export default function NewsReel() {
       }
     }
     load()
-    // Refresh every 15 minutes
     const id = setInterval(load, 15 * 60 * 1000)
     return () => clearInterval(id)
   }, [])
 
-  // Auto-scroll
+  // Auto-scroll only when collapsed (expanded = user-controlled)
   useEffect(() => {
-    if (!scrollRef.current || headlines.length === 0) return
+    if (!scrollRef.current || headlines.length === 0 || expanded) return
     const el = scrollRef.current
     let pos = 0
     const id = setInterval(() => {
-      pos += 0.5
+      pos += 0.4
       if (pos >= el.scrollHeight - el.clientHeight) pos = 0
       el.scrollTop = pos
     }, 40)
     return () => clearInterval(id)
-  }, [headlines])
+  }, [headlines, expanded])
+
+  const visible  = expanded ? headlines : headlines.slice(0, DEFAULT_COUNT)
+  const hiddenCount = headlines.length - DEFAULT_COUNT
 
   return (
     <div className={styles.widget}>
@@ -73,26 +76,43 @@ export default function NewsReel() {
       {error   && <div className={styles.status}>FEED UNAVAILABLE</div>}
 
       {!loading && !error && (
-        <div className={styles.scroll} ref={scrollRef}>
-          {headlines.map((h, i) => (
-            <a
-              key={i}
-              className={styles.item}
-              href={h.link}
-              target="_blank"
-              rel="noreferrer"
+        <>
+          <div
+            className={`${styles.scroll} ${expanded ? styles.scrollExpanded : ''}`}
+            ref={scrollRef}
+          >
+            {visible.map((h, i) => (
+              <a
+                key={i}
+                className={styles.item}
+                href={h.link}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {h.thumbnail
+                  ? <img src={h.thumbnail} alt="" className={styles.thumb} />
+                  : <div className={styles.thumbPlaceholder} />
+                }
+                <div className={styles.itemBody}>
+                  <span className={styles.ticker}>{String(i + 1).padStart(2, '0')}</span>
+                  <span className={styles.title}>{h.title}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          {headlines.length > DEFAULT_COUNT && (
+            <button
+              className={styles.expandBtn}
+              onClick={() => setExpanded(e => !e)}
             >
-              {h.thumbnail
-                ? <img src={h.thumbnail} alt="" className={styles.thumb} />
-                : <div className={styles.thumbPlaceholder} />
+              {expanded
+                ? '▲ SHOW LESS'
+                : `▼ +${hiddenCount} MORE STORIES`
               }
-              <div className={styles.itemBody}>
-                <span className={styles.ticker}>{String(i + 1).padStart(2, '0')}</span>
-                <span className={styles.title}>{h.title}</span>
-              </div>
-            </a>
-          ))}
-        </div>
+            </button>
+          )}
+        </>
       )}
     </div>
   )
