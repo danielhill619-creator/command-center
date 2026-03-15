@@ -4,7 +4,6 @@ import styles from './GeminiPanel.module.css'
 export default function GeminiPanel() {
   const { briefing, briefingLoading, triggerBriefing, ready } = useGemini('homebase')
 
-  // Format the briefing text — split on bullet markers for clean rendering
   const lines = briefing
     ? briefing.split('\n').filter(l => l.trim())
     : []
@@ -13,7 +12,7 @@ export default function GeminiPanel() {
     <div className={styles.widget}>
       <div className={styles.header}>
         <span className={styles.icon}>✦</span>
-        <span className={styles.label}>GEMINI BRIEFING</span>
+        <span className={styles.label}>DAILY BRIEFING</span>
         <div className={styles.headerRight}>
           {briefingLoading && <span className={styles.thinking}>THINKING...</span>}
           <button
@@ -31,14 +30,12 @@ export default function GeminiPanel() {
         {briefingLoading && !briefing && (
           <div className={styles.loadingState}>
             <span className={styles.pulse} />
-            <span className={styles.loadingText}>GENERATING MORNING BRIEFING...</span>
+            <span className={styles.loadingText}>GENERATING BRIEFING...</span>
           </div>
         )}
 
         {!briefingLoading && !briefing && !ready && (
-          <div className={styles.placeholder}>
-            Connecting to data layer...
-          </div>
+          <div className={styles.placeholder}>Connecting to data layer...</div>
         )}
 
         {!briefingLoading && !briefing && ready && (

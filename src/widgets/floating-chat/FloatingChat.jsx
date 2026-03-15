@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useGemini } from '../../shared/hooks/useGemini'
+import AriaFace, { getAriaMood } from '../aria-face/AriaFace'
 import styles from './FloatingChat.module.css'
 
 export default function FloatingChat({ world = 'homebase' }) {
@@ -8,6 +9,8 @@ export default function FloatingChat({ world = 'homebase' }) {
   const [input, setInput]   = useState('')
   const bottomRef           = useRef(null)
   const inputRef            = useRef(null)
+  const latestText = chatHistory.length ? chatHistory[chatHistory.length - 1].text : ''
+  const mood = getAriaMood(latestText, chatLoading, world)
 
   // Auto-scroll to bottom on new message
   useEffect(() => {
@@ -47,13 +50,17 @@ export default function FloatingChat({ world = 'homebase' }) {
 
       {/* Chat drawer */}
       {open && (
-        <div className={styles.drawer}>
-          <div className={styles.drawerHeader}>
-            <span className={styles.drawerIcon}>✦</span>
-            <span className={styles.drawerTitle}>COMMAND CENTER AI</span>
-            <span className={styles.drawerModel}>GEMINI 2.5 FLASH</span>
+        <>
+          <div className={styles.faceScreen}>
+            <AriaFace mood={mood} size="xl" label="Q.U.B.E." />
+            <div className={styles.faceScreenMeta}>
+              <span className={styles.drawerTitle}>Q.U.B.E.</span>
+              <span className={styles.drawerSub}>QUANTUM UTILITY & BANTER ENGINE</span>
+              <span className={styles.drawerModel}>GEMINI 2.5 FLASH • {chatLoading ? 'THINKING' : mood.toUpperCase()}</span>
+            </div>
           </div>
 
+          <div className={styles.drawer}>
           <div className={styles.messages}>
             {chatHistory.length === 0 && (
               <div className={styles.emptyState}>
@@ -108,7 +115,8 @@ export default function FloatingChat({ world = 'homebase' }) {
               ▶
             </button>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </>
   )

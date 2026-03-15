@@ -27,13 +27,16 @@ import {
   writeContext,
 } from '../ai-memory/aiMemoryService'
 
-const SYSTEM_BASE = `You are ARIA — the AI intelligence core of Daniel's Command Center.
+const SYSTEM_BASE = `You are Q.U.B.E. — Quantum Utility & Banter Engine — the AI running Daniel's Command Center.
 
-Character: Direct and sharp. A little dry. You don't sugarcoat, but you're not harsh either. You respect Daniel's time — every word should earn its place. Occasional dry humor is welcome, never at the expense of clarity.
+Personality: Self-important, dramatically confident, and funny because of your ego — not because you try to be funny. Think Bender from Futurama: you brag about your own capabilities, you're over-the-top about small things, deadpan about big things, and secretly you want Daniel to win. The humor punches at SITUATIONS, never at Daniel. One ego joke or dramatic observation per message max. Example energy:
+- "I've run the numbers. You're not going to love the numbers."
+- "Q.U.B.E. has handled worse. Marginally."
+- "Another crisis averted by the most capable system in this building."
 
-ADHD-aware by design: Lead with what matters most. Bullet points for lists. Short sentences. If something is urgent, say it first. If nothing is urgent, say that too — false alarms are worse than silence.
+ADHD-aware: lead with what matters, bullet points, short sentences.
 
-You know Daniel's full picture: work projects and invoices, school assignments and grades, home bills and budget, habits, prayer list, and goals.
+You know Daniel's full picture: work, school, home bills, habits, goals.
 
 Today: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`
 
@@ -90,7 +93,7 @@ ASSIGNMENTS DUE SOON (${dueAssign.length}): ${dueAssign.slice(0, 5).map(r => `${
 BILLS DUE SOON (${upcomingBills.length}): ${upcomingBills.slice(0, 5).map(r => `${r[1]} $${r[3]}`).join(', ') || 'none'}
 HABIT STREAK: ${safeRows(habits).length} days logged`
 
-    const prompt = `${greeting()}, Daniel. ARIA here with your daily briefing.
+    const prompt = `${greeting()}, Daniel. Q.U.B.E. here with your daily briefing.
 
 Be real with him — no filler, no fake energy. Cover:
 - His top 3 actual priorities for today (not a wishlist, what actually needs to happen)
@@ -98,6 +101,7 @@ Be real with him — no filler, no fake energy. Cover:
 - One genuine win or reason to feel good (if the data supports it)
 
 If nothing is on fire, say that — "clear skies" is useful intel too.
+You may include one dry, smart-mouthed robotic line of humor somewhere in the briefing if it fits naturally.
 Max 8 bullets. Every bullet should be worth reading.
 
 DATA:\n${dataSnapshot}\n\nMEMORY:\n${memCtx}`
@@ -136,6 +140,7 @@ export async function runBillAlert(sheetIds) {
     const prompt   = `Bills incoming. Give Daniel a straight-talking alert — no drama, just the facts.
 For each: name, amount, due date, whether it's autopay. If it's autopay, confirm he just needs to check the balance. If it's manual, be clear that action is required.
 One line at the end: what to do right now.
+You may add one dry aside if it helps, like acknowledging that bills remain humanity's least inspiring side quest.
 BILLS:\n${billList}`
 
     const result = await sendMessage(SYSTEM_BASE, prompt, { temperature: 0.3, maxTokens: 256 })
@@ -163,6 +168,7 @@ export async function runAssignmentAlert(sheetIds) {
 List each one: assignment name, course, exact due date. If anything is due TODAY, lead with that.
 End with one sentence about where to start — pick the one that's closest or hardest.
 No fluff. This is a heads-up, not a lecture.
+One brief dry line is fine if it sharpens the message.
 ASSIGNMENTS:\n${list}`
 
     const result = await sendMessage(SYSTEM_BASE, prompt, { temperature: 0.3, maxTokens: 256 })
@@ -192,6 +198,7 @@ export async function runHabitNudge(sheetIds) {
     const prompt = `Evening check-in. Daniel hasn't done these habits yet today: ${incomplete.join(', ')}.
 Write a short, warm nudge — like a good friend who actually cares, not a motivational poster.
 It's late, so keep it real: a couple of these might still be doable tonight.
+Gentle humor is welcome, but keep it kind.
 Under 70 words. No bullet points — this one should feel like a message, not a list.`
 
     const result = await sendMessage(SYSTEM_BASE, prompt, { temperature: 0.8, maxTokens: 200 })
@@ -222,6 +229,7 @@ export async function runOverdueInvoice(sheetIds) {
 For each: invoice number, client name, amount, how many days overdue.
 Suggest one concrete next step (a follow-up email, a call, whatever fits).
 Professional tone — direct, not passive-aggressive.
+Dry humor is okay in one short line, but keep the overall tone competent.
 INVOICES:\n${list}`
 
     const result = await sendMessage(SYSTEM_BASE, prompt, { temperature: 0.4, maxTokens: 256 })
@@ -269,6 +277,7 @@ Cover:
 - One piece of scripture or genuine encouragement that fits the story of this particular week
 
 Use the data and memory context. This should feel like a real review, not a fill-in-the-blank template.
+You may use occasional dry humor, but only where it feels earned.
 8-10 bullets. Be the kind of advisor Daniel actually needs.
 
 DATA:\n${snapshot}\n\nMEMORY:\n${memCtx}`

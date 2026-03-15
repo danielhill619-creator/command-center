@@ -7,8 +7,8 @@ import SystemMonitor from '../../widgets/sysmonitor/SystemMonitor'
 import Weather from '../../widgets/weather/Weather'
 import NewsReel from '../../widgets/newsreel/NewsReel'
 import GeminiPanel from '../../widgets/gemini-panel/GeminiPanel'
+import QubePanel from '../../widgets/qube-panel/QubePanel'
 import QuickStats from '../../widgets/quickstats/QuickStats'
-import FloatingChat from '../../widgets/floating-chat/FloatingChat'
 import styles from './HomeBase.module.css'
 
 const PORTALS = [
@@ -153,10 +153,13 @@ export default function HomeBase() {
               </div>
             </div>
           </div>
+
+          {/* Q.U.B.E. row — face + persistent chat */}
+          <div className={styles.qubeRow}>
+            <QubePanel world="homebase" />
+          </div>
         </div>
       </main>
-
-      <FloatingChat world="homebase" />
     </div>
   )
 }

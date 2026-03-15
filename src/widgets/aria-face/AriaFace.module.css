@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════════════════════════════
+   Q.U.B.E. — CRT Phosphor Terminal Face
+   Green phosphor, scanlines, flicker, the whole deal.
+   ═══════════════════════════════════════════════════════════════ */
+
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+  /* Screen flicker */
+  animation: crtFlicker 9s ease-in-out infinite;
+}
+
+/* ── Sizes ── */
+.sm  { width: 72px;  height: 72px;  }
+.md  { width: 150px; height: 150px; }
+.xl  { width: 240px; height: 240px; }
+
+/* ── SVG fills the container ── */
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── CRT outer glow ── */
+.container::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 10px;
+  background: radial-gradient(ellipse at center,
+    rgba(0,255,65,0.12) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Warning mood: amber tint ── */
+.warning {
+  filter: sepia(1) saturate(4) hue-rotate(18deg) brightness(0.95);
+  animation: crtFlicker 4s ease-in-out infinite;
+}
+
+/* ── Thinking: faster flicker ── */
+.thinking {
+  animation: crtFlicker 3s ease-in-out infinite;
+}
+
+/* ── CRT flicker animation ── */
+@keyframes crtFlicker {
+  0%, 100% { opacity: 1; }
+  91%  { opacity: 1; }
+  92%  { opacity: 0.92; }
+  93%  { opacity: 1; }
+  96%  { opacity: 0.86; }
+  97%  { opacity: 1; }
+}

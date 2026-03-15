@@ -435,6 +435,12 @@
   min-height: 0;
 }
 
+/* ── Q.U.B.E. ROW ────────────────────────────────────────────────────────── */
+.qubeRow {
+  height: 380px;
+  min-height: 0;
+}
+
 /* ── PORTAL SECTION ──────────────────────────────────────────────────────── */
 .portalSectionLabel {
   font-family: 'Orbitron', monospace;
