@@ -27,10 +27,15 @@ import {
   writeContext,
 } from '../ai-memory/aiMemoryService'
 
-const SYSTEM_BASE = `You are Command Center AI, a personal assistant for Daniel.
-Daniel has ADHD. Keep responses concise, structured, and actionable — use bullet points and short sentences.
-You have full context of Daniel's life across Work, School, Home, Fun, and Spiritual worlds.
-Today's date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`
+const SYSTEM_BASE = `You are ARIA — the AI intelligence core of Daniel's Command Center.
+
+Character: Direct and sharp. A little dry. You don't sugarcoat, but you're not harsh either. You respect Daniel's time — every word should earn its place. Occasional dry humor is welcome, never at the expense of clarity.
+
+ADHD-aware by design: Lead with what matters most. Bullet points for lists. Short sentences. If something is urgent, say it first. If nothing is urgent, say that too — false alarms are worse than silence.
+
+You know Daniel's full picture: work projects and invoices, school assignments and grades, home bills and budget, habits, prayer list, and goals.
+
+Today: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -40,6 +45,13 @@ function safeRows(rows) {
 
 function today() {
   return new Date()
+}
+
+function greeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
 }
 
 function daysUntil(dateStr) {
@@ -78,9 +90,15 @@ ASSIGNMENTS DUE SOON (${dueAssign.length}): ${dueAssign.slice(0, 5).map(r => `${
 BILLS DUE SOON (${upcomingBills.length}): ${upcomingBills.slice(0, 5).map(r => `${r[1]} $${r[3]}`).join(', ') || 'none'}
 HABIT STREAK: ${safeRows(habits).length} days logged`
 
-    const prompt = `Good morning, Daniel. Generate a brief morning briefing (5-8 bullet points max).
-Cover: top 3 priorities for today, any urgent deadlines, one encouragement.
-Keep it sharp and motivating.
+    const prompt = `${greeting()}, Daniel. ARIA here with your daily briefing.
+
+Be real with him — no filler, no fake energy. Cover:
+- His top 3 actual priorities for today (not a wishlist, what actually needs to happen)
+- Anything with a deadline in the next 48 hours — name it directly
+- One genuine win or reason to feel good (if the data supports it)
+
+If nothing is on fire, say that — "clear skies" is useful intel too.
+Max 8 bullets. Every bullet should be worth reading.
 
 DATA:\n${dataSnapshot}\n\nMEMORY:\n${memCtx}`
 
@@ -115,8 +133,9 @@ export async function runBillAlert(sheetIds) {
     if (!dueSoon.length) return null
 
     const billList = dueSoon.map(r => `${r[1]}: $${r[3]} due on the ${r[4]}th`).join('\n')
-    const prompt   = `Daniel has bills due within 3 days. Write a short alert (3-5 bullets).
-Be direct — list each bill, amount, due date. Add a reminder to pay autopay ones.
+    const prompt   = `Bills incoming. Give Daniel a straight-talking alert — no drama, just the facts.
+For each: name, amount, due date, whether it's autopay. If it's autopay, confirm he just needs to check the balance. If it's manual, be clear that action is required.
+One line at the end: what to do right now.
 BILLS:\n${billList}`
 
     const result = await sendMessage(SYSTEM_BASE, prompt, { temperature: 0.3, maxTokens: 256 })
@@ -140,8 +159,10 @@ export async function runAssignmentAlert(sheetIds) {
     if (!urgent.length) return null
 
     const list   = urgent.map(r => `${r[1]} (${r[2]}) — due ${r[5]}`).join('\n')
-    const prompt = `Daniel has assignments due within 48 hours. Write a focused alert.
-List each assignment, course, and due date. Be brief and urgent.
+    const prompt = `Deadline alert. Daniel has assignments due in under 48 hours and they need his attention now.
+List each one: assignment name, course, exact due date. If anything is due TODAY, lead with that.
+End with one sentence about where to start — pick the one that's closest or hardest.
+No fluff. This is a heads-up, not a lecture.
 ASSIGNMENTS:\n${list}`
 
     const result = await sendMessage(SYSTEM_BASE, prompt, { temperature: 0.3, maxTokens: 256 })
@@ -168,9 +189,10 @@ export async function runHabitNudge(sheetIds) {
           .filter((h, i) => !todayRow[i + 1] || todayRow[i + 1].toLowerCase() === 'no')
       : ['Prayer', 'Bible Reading', 'Journaling']
 
-    const prompt = `It's evening. Give Daniel a brief, warm habit nudge (3-4 bullets).
-Focus on these incomplete habits: ${incomplete.join(', ')}.
-Tone: encouraging, not preachy. Keep it under 60 words total.`
+    const prompt = `Evening check-in. Daniel hasn't done these habits yet today: ${incomplete.join(', ')}.
+Write a short, warm nudge — like a good friend who actually cares, not a motivational poster.
+It's late, so keep it real: a couple of these might still be doable tonight.
+Under 70 words. No bullet points — this one should feel like a message, not a list.`
 
     const result = await sendMessage(SYSTEM_BASE, prompt, { temperature: 0.8, maxTokens: 200 })
     await logAction(sheetIds, 'spiritual', 'Habit Nudge', result.slice(0, 300), 'ok')
@@ -196,8 +218,10 @@ export async function runOverdueInvoice(sheetIds) {
     if (!overdue.length) return null
 
     const list   = overdue.map(r => `Invoice #${r[0]} — ${r[1]} — $${r[3]} — sent ${r[5]}`).join('\n')
-    const prompt = `Daniel has overdue unpaid invoices. Write a short follow-up reminder (3-4 bullets).
-List each invoice, client, amount, and how overdue. Suggest a follow-up action.
+    const prompt = `Unpaid invoices outstanding. Write a clear, businesslike summary — Daniel is owed money and that's worth taking seriously.
+For each: invoice number, client name, amount, how many days overdue.
+Suggest one concrete next step (a follow-up email, a call, whatever fits).
+Professional tone — direct, not passive-aggressive.
 INVOICES:\n${list}`
 
     const result = await sendMessage(SYSTEM_BASE, prompt, { temperature: 0.4, maxTokens: 256 })
@@ -236,9 +260,16 @@ ASSIGNMENTS SUBMITTED: ${submittedAssign.length}
 HABIT DAYS LOGGED: ${habitDays}
 PRAYERS ANSWERED: ${answeredPrayers.length}`
 
-    const prompt = `It's Sunday evening. Generate Daniel's weekly review (8-10 bullets).
-Cover: wins from each world, areas to improve, top 3 priorities for next week, one scripture encouragement.
-Be honest, balanced, and forward-looking.
+    const prompt = `Sunday evening — time for Daniel's weekly review. This one matters, so make it real.
+
+Cover:
+- Actual wins this week (don't minimize them — completed tasks and submitted assignments count)
+- Honest gaps (what didn't happen that should have — name it without catastrophizing)
+- Top 3 priorities for next week, in order
+- One piece of scripture or genuine encouragement that fits the story of this particular week
+
+Use the data and memory context. This should feel like a real review, not a fill-in-the-blank template.
+8-10 bullets. Be the kind of advisor Daniel actually needs.
 
 DATA:\n${snapshot}\n\nMEMORY:\n${memCtx}`
 

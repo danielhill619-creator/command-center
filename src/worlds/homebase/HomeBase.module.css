@@ -136,41 +136,7 @@
   z-index: 0;
 }
 
-/* ── PANEL WRAP — scan line effect for top widget panels ────────────────── */
-.panelWrap {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
 
-.panelScan {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0,200,255,0.12) 15%,
-    rgba(0,200,255,0.70) 40%,
-    rgba(0,200,255,0.90) 50%,
-    rgba(0,200,255,0.70) 60%,
-    rgba(0,200,255,0.12) 85%,
-    transparent 100%
-  );
-  box-shadow: 0 0 10px 1px rgba(0,200,255,0.30);
-  pointer-events: none;
-  z-index: 10;
-  top: 0;
-  opacity: 0;
-  animation: panelScanAnim 3s linear infinite;
-}
-
-.panelWrap:hover .panelScan {
-  opacity: 1;
-}
 
 /* ── VIGNETTE — edge darkening + blue ambient glow ──────────────────────── */
 .vignette {
@@ -206,12 +172,7 @@
 @keyframes driftMid  { from { background-position: 0 0; } to { background-position: -600px -500px; } }
 @keyframes driftNear { from { background-position: 0 0; } to { background-position: -400px -300px; } }
 
-@keyframes panelScanAnim {
-  0%   { top:   0%;  opacity: 0;   }
-  4%   {              opacity: 0.9; }
-  94%  {              opacity: 0.4; }
-  100% { top: 100%;  opacity: 0;   }
-}
+
 
 @keyframes pulse {
   0%,100% { opacity: 1;   box-shadow: 0 0 8px  rgba(0,255,136,0.9); }
@@ -456,15 +417,22 @@
   grid-template-columns: 1fr 420px;
   gap: 16px;
   align-items: stretch;
-  min-height: 260px;
+  min-height: 320px;
 }
 
 .colNarrow,
 .colWide,
-.colGemini,
 .colPortals {
   display: flex;
   flex-direction: column;
+}
+
+/* colGemini must cap height so overflow-y: auto activates inside the widget */
+.colGemini {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
 
 /* ── PORTAL SECTION ──────────────────────────────────────────────────────── */
