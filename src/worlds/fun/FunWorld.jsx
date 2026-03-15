@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import FloatingChat from '../../widgets/floating-chat/FloatingChat'
 import styles from './FunWorld.module.css'
 
 export default function FunWorld() {
@@ -15,6 +16,7 @@ export default function FunWorld() {
         <h1 className={styles.heading}>Fun World</h1>
         <p className={styles.placeholder}>Phase 8 — Coming Soon</p>
       </main>
+      <FloatingChat world="fun" />
     </div>
   )
 }

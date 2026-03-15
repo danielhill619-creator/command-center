@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import FloatingChat from '../../widgets/floating-chat/FloatingChat'
 import styles from './WorkWorld.module.css'
 
 export default function WorkWorld() {
@@ -15,6 +16,7 @@ export default function WorkWorld() {
         <h1 className={styles.heading}>Work World</h1>
         <p className={styles.placeholder}>Phase 5 — Coming Soon</p>
       </main>
+      <FloatingChat world="work" />
     </div>
   )
 }
