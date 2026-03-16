@@ -8,6 +8,7 @@ import {
   getSelectedGeminiModel,
   listAvailableGeminiModels,
   setSelectedGeminiModel,
+  subscribeToGeminiUsage,
 } from '../integrations/gemini-api/geminiService'
 import {
   loadNewsPreferences,
@@ -19,17 +20,10 @@ import styles from './Settings.module.css'
 const HOME_LAYOUT_KEY = 'cc_home_dashboard_layout_v1'
 const SHEET_IDS_KEY = 'cc_sheet_ids'
 const REPO_URL_KEY = 'cc_repo_url_v1'
+const GEMINI_USAGE_URL = 'https://aistudio.google.com/app/apikey'
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString()
-}
-
-function getUsageShare(modelName, usageStats) {
-  const modelKey = modelName.replace('models/', '')
-  const total = Object.values(usageStats).reduce((sum, stats) => sum + Number(stats.requests || 0), 0)
-  const current = Number(usageStats[modelKey]?.requests || 0)
-  if (!total) return '0%'
-  return `${Math.round((current / total) * 100)}%`
 }
 
 function inferAvailability(stats) {
@@ -64,7 +58,6 @@ export default function Settings() {
   const [newsSavedNotice, setNewsSavedNotice] = useState('')
 
   const manifest = useMemo(() => getAppManifest(), [])
-
   useEffect(() => {
     async function load() {
       setModelsLoading(true)
@@ -76,6 +69,11 @@ export default function Settings() {
           getEmailState(),
         ])
         setModels(availableModels)
+        if (availableModels.length && !availableModels.some(model => model.name.replace('models/', '') === getSelectedGeminiModel())) {
+          const fallbackModel = availableModels[0].name.replace('models/', '')
+          setSelectedGeminiModel(fallbackModel)
+          setSelectedModelState(fallbackModel)
+        }
         setEmailState(mailState)
       } catch (error) {
         setModelsError(error.message)
@@ -87,6 +85,31 @@ export default function Settings() {
     }
 
     load()
+
+    const unsubscribe = subscribeToGeminiUsage((stats) => {
+      setUsageStats(stats)
+      setSelectedModelState(getSelectedGeminiModel())
+    })
+
+    const pollId = window.setInterval(() => {
+      setUsageStats(getGeminiUsageStats())
+      setSelectedModelState(getSelectedGeminiModel())
+    }, 5000)
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        setUsageStats(getGeminiUsageStats())
+        setSelectedModelState(getSelectedGeminiModel())
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      unsubscribe()
+      window.clearInterval(pollId)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   function saveModel(model) {
@@ -144,6 +167,19 @@ export default function Settings() {
 
       <main className={styles.grid}>
         <section className={styles.card}>
+          <div className={styles.cardTitle}>Repository Context</div>
+          <div className={styles.rowLabel}>Repository URL</div>
+          <input
+            className={styles.input}
+            value={repoUrl}
+            onChange={e => saveRepoUrl(e.target.value)}
+            placeholder="Paste the project repository URL here"
+          />
+          <p className={styles.helpText}>This is the project location Gemini should use for repository-aware context inside Command Center.</p>
+          <div className={styles.usageLine}>Saved now: {repoUrl || 'No repository URL saved yet'}</div>
+        </section>
+
+        <section className={styles.card}>
           <div className={styles.cardTitle}>AI Model</div>
           <div className={styles.rowLabel}>Current model</div>
           <select className={styles.select} value={selectedModel} onChange={e => saveModel(e.target.value)}>
@@ -154,41 +190,39 @@ export default function Settings() {
             ))}
             {!models.length && <option value={selectedModel}>{selectedModel}</option>}
           </select>
-          <p className={styles.helpText}>Switches future chat requests to the selected Gemini model immediately.</p>
+          <p className={styles.helpText}>Switches future chat requests to the selected Gemini model immediately. This page refreshes usage automatically while you keep it open.</p>
+          <div className={styles.usageLine}>Selected now: {selectedModel}</div>
           {modelsLoading && <div className={styles.muted}>Loading available Gemini models...</div>}
           {modelsError && <div className={styles.error}>{modelsError}</div>}
         </section>
 
         <section className={styles.card}>
-          <div className={styles.cardTitle}>Usage Snapshot</div>
-          <p className={styles.helpText}>Google is not giving this frontend a trustworthy per-model remaining-quota API, so this panel shows live availability state instead of fake percentage math.</p>
-          <div className={styles.usageGrid}>
-            {Object.entries(usageStats).length === 0 && <div className={styles.muted}>No Gemini usage has been recorded in this browser yet.</div>}
-            {Object.entries(usageStats).map(([model, stats]) => (
-              <div key={model} className={styles.usageCard}>
-                <div className={styles.usageModel}>{model}</div>
-                <div className={styles.usageLine}>Availability: {inferAvailability(stats)}</div>
-                <div className={styles.usageLine}>State: {stats.lastError ? 'Blocked or degraded' : stats.requests > 0 ? 'Active' : 'Not sampled yet'}</div>
-                <div className={styles.usageLine}>Requests seen here: {formatNumber(stats.requests)}</div>
-                <div className={styles.usageLine}>Last used: {stats.lastUsedAt || 'Never'}</div>
-                {stats.lastError && <div className={styles.error}>Last error: {stats.lastError}</div>}
-              </div>
-            ))}
-          </div>
+          <div className={styles.cardTitle}>Gemini Usage</div>
+          <p className={styles.helpText}>Open Google AI Studio to see your actual Gemini usage, quotas, API keys, and project limits directly from Google.</p>
+          <a className={styles.usageLinkCard} href={GEMINI_USAGE_URL} target="_blank" rel="noreferrer">
+            <span className={styles.usageLogo} aria-hidden="true">G</span>
+            <span>
+              <span className={styles.usageLinkTitle}>Open Google AI Studio</span>
+              <span className={styles.usageLinkMeta}>View Gemini usage and limits</span>
+            </span>
+          </a>
         </section>
 
         <section className={`${styles.card} ${styles.cardWide}`}>
           <div className={styles.cardTitle}>Available Gemini Models</div>
           <div className={styles.modelList}>
             {models.map(model => (
-              <div key={model.name} className={styles.modelRow}>
+              <div key={model.name} className={`${styles.modelRow} ${selectedModel === model.name.replace('models/', '') ? styles.modelRowActive : ''}`}>
                 <div>
                   <div className={styles.modelName}>{model.displayName}</div>
                   <div className={styles.modelMeta}>{model.name.replace('models/', '')}</div>
                 </div>
                 <div className={styles.modelFacts}>
-                  <span>{getUsageShare(model.name, usageStats)} of local usage</span>
+                  <span>{inferAvailability(usageStats[model.name.replace('models/', '')])}</span>
                   <span>{(model.supportedGenerationMethods || []).join(', ')}</span>
+                  <button className={styles.modelSelectBtn} onClick={() => saveModel(model.name.replace('models/', ''))}>
+                    {selectedModel === model.name.replace('models/', '') ? 'Selected' : 'Use model'}
+                  </button>
                 </div>
               </div>
             ))}
@@ -209,14 +243,6 @@ export default function Settings() {
 
         <section className={styles.card}>
           <div className={styles.cardTitle}>App Identity</div>
-          <div className={styles.rowLabel}>Repository URL</div>
-          <input
-            className={styles.input}
-            value={repoUrl}
-            onChange={e => saveRepoUrl(e.target.value)}
-            placeholder="Paste the project repository URL here"
-          />
-          <p className={styles.helpText}>Stored locally for now so Gemini can reference where this app lives once we surface it in prompts and tools.</p>
           <div className={styles.rowLabel}>Worlds</div>
           <div className={styles.tagWrap}>{manifest.worlds.map(item => <span key={item} className={styles.tag}>{item}</span>)}</div>
           <div className={styles.rowLabel}>Widgets</div>

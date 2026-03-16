@@ -20,6 +20,7 @@ import {
 
 const MailCenterContext = createContext(null)
 const META_STORAGE_KEY = 'cc_email_meta_v1'
+const STANDARD_FOLDERS = ['Inbox', 'Drafts', 'Sent', 'Archive', 'Trash']
 
 function readMetaStore() {
   try {
@@ -125,14 +126,16 @@ function useMailCenterState() {
   useEffect(() => {
     const connectedAccounts = accounts.filter(account => account.connected)
     connectedAccounts.forEach(account => {
-      const inboxKey = getCacheKey(account.id, 'Inbox', '')
-      if (!cache.current.has(inboxKey)) {
-        listMessages({ accountId: account.id, folder: 'Inbox', query: '' })
-          .then(rows => {
-            cache.current.set(inboxKey, rows)
-          })
-          .catch(() => {})
-      }
+      STANDARD_FOLDERS.forEach(folderName => {
+        const folderKey = getCacheKey(account.id, folderName, '')
+        if (!cache.current.has(folderKey)) {
+          listMessages({ accountId: account.id, folder: folderName, query: '' })
+            .then(rows => {
+              cache.current.set(folderKey, rows)
+            })
+            .catch(() => {})
+        }
+      })
     })
   }, [accounts, getCacheKey])
 
@@ -146,9 +149,25 @@ function useMailCenterState() {
   }, [busy, query, refresh])
 
   useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible' && !busy) refresh().catch(() => {})
+    }
+
+    function handleFocus() {
+      if (!busy) refresh().catch(() => {})
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [busy, refresh])
+
+  useEffect(() => {
     if (accountId === 'all' || query.trim()) return
-    const warmFolders = ['Inbox', 'Archive', 'Sent']
-    warmFolders
+    STANDARD_FOLDERS
       .filter(name => name !== folder)
       .forEach(name => {
         const key = getCacheKey(accountId, name, '')
@@ -243,6 +262,23 @@ function useMailCenterState() {
     [decoratedMessages, selectedId]
   )
 
+  function getFolderStats(targetAccountId, targetFolder) {
+    if (targetAccountId === 'all') {
+      const accountStats = accounts.map(account => getFolderStats(account.id, targetFolder))
+      return {
+        total: accountStats.reduce((sum, stats) => sum + stats.total, 0),
+        unread: accountStats.reduce((sum, stats) => sum + stats.unread, 0),
+      }
+    }
+
+    const key = getCacheKey(targetAccountId, targetFolder, '')
+    const rows = cache.current.get(key) || []
+    return {
+      total: rows.length,
+      unread: rows.filter(message => !message.read).length,
+    }
+  }
+
   return {
     fetchError,
     accounts,
@@ -262,6 +298,7 @@ function useMailCenterState() {
     loading,
     busy,
     actionError,
+    getFolderStats,
     refresh,
     selectMessage,
     markRead:              (id, read, accountId) => perform(

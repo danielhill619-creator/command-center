@@ -9,6 +9,15 @@
 const MODEL_STORAGE_KEY = 'cc_gemini_model_v1'
 const USAGE_STORAGE_KEY = 'cc_gemini_usage_v1'
 const DEFAULT_GEMINI_MODEL = 'gemini-3.1-flash-lite-preview'
+const GEMINI_USAGE_EVENT = 'cc:gemini-usage-updated'
+const GEMINI_MODEL_EVENT = 'cc:gemini-model-updated'
+
+function isToolCapableModel(model) {
+  const name = (typeof model === 'string' ? model : model?.name || '').replace('models/', '')
+  if (!name) return false
+  if (/tts|image|embedding|robotics|nano-banana|gemma/i.test(name)) return false
+  return /gemini|deep-research|computer-use/i.test(name)
+}
 
 function getGeminiModel() {
   return localStorage.getItem(MODEL_STORAGE_KEY) || DEFAULT_GEMINI_MODEL
@@ -19,7 +28,9 @@ export function getSelectedGeminiModel() {
 }
 
 export function setSelectedGeminiModel(model) {
+  if (!isToolCapableModel(model)) return
   localStorage.setItem(MODEL_STORAGE_KEY, model)
+  window.dispatchEvent(new CustomEvent(GEMINI_MODEL_EVENT, { detail: { model } }))
 }
 
 function getGeminiBase() {
@@ -36,6 +47,7 @@ function readUsageStore() {
 
 function writeUsageStore(value) {
   localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(value))
+  window.dispatchEvent(new CustomEvent(GEMINI_USAGE_EVENT, { detail: value }))
 }
 
 function recordUsage(model, usageMetadata = {}) {
@@ -85,6 +97,27 @@ export function getGeminiUsageStats() {
   return readUsageStore()
 }
 
+export function subscribeToGeminiUsage(callback) {
+  function emitUsage() {
+    callback(getGeminiUsageStats())
+  }
+
+  function handleStorage(event) {
+    if (event.key === USAGE_STORAGE_KEY) emitUsage()
+    if (event.key === MODEL_STORAGE_KEY) callback(getGeminiUsageStats(), getSelectedGeminiModel())
+  }
+
+  window.addEventListener(GEMINI_USAGE_EVENT, emitUsage)
+  window.addEventListener(GEMINI_MODEL_EVENT, emitUsage)
+  window.addEventListener('storage', handleStorage)
+
+  return () => {
+    window.removeEventListener(GEMINI_USAGE_EVENT, emitUsage)
+    window.removeEventListener(GEMINI_MODEL_EVENT, emitUsage)
+    window.removeEventListener('storage', handleStorage)
+  }
+}
+
 export async function listAvailableGeminiModels() {
   const apiKey = getApiKey()
   if (!apiKey || apiKey === 'PLACEHOLDER') throw new Error('GEMINI_NO_KEY')
@@ -98,6 +131,7 @@ export async function listAvailableGeminiModels() {
   const data = await res.json()
   return (data.models || [])
     .filter(model => model.supportedGenerationMethods?.includes('generateContent'))
+    .filter(isToolCapableModel)
     .sort((a, b) => a.displayName.localeCompare(b.displayName))
 }
 

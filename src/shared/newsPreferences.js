@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'cc_news_preferences_v1'
-const GOOGLE_NEWS = 'https://news.google.com/rss'
+const BING_NEWS = 'https://www.bing.com/news/search'
 
 export const DEFAULT_NEWS_PREFERENCES = {
   topics: [
@@ -84,17 +84,17 @@ export function resetNewsPreferences() {
 function buildSearchFeed(label, query) {
   return {
     label,
-    url: `${GOOGLE_NEWS}/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`,
+    url: `${BING_NEWS}?q=${encodeURIComponent(query)}&format=rss`,
   }
 }
 
 function buildTopicFeed(label) {
   if (label === 'U.S. Top Stories') {
-    return { label, url: `${GOOGLE_NEWS}?hl=en-US&gl=US&ceid=US:en` }
+    return buildSearchFeed(label, 'U.S. top stories')
   }
 
   if (label === 'Global Top Stories') {
-    return { label, url: `${GOOGLE_NEWS}?hl=en&gl=US&ceid=US:en` }
+    return buildSearchFeed(label, 'global top stories')
   }
 
   return buildSearchFeed(label, TOPIC_QUERY_MAP[label] || label)

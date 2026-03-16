@@ -3,6 +3,7 @@ import {
   clearStoredProviderAuth,
   connectGoogleMailAccount,
   connectMicrosoftMailAccount,
+  ensureStoredProviderAuth,
   getProviderConfigStatus,
   getStoredProviderAuth,
   markStoredProviderAuthInvalid,
@@ -96,7 +97,7 @@ function hydrateAccount(a) {
     ...a,
     ...(stored?.email ? { address: stored.email } : {}),
     ...(stored?.name ? { label: stored.name } : {}),
-    connected: !!stored?.connected,
+    connected: stored ? stored.connected !== false : !!a.connected,
     authError: stored?.lastError || '',
     providerStatus: providerStatus(a.provider),
   }
@@ -138,6 +139,9 @@ export async function getEmailState() {
       // fall through
     }
   }
+
+  await Promise.all(state.accounts.map(account => ensureStoredProviderAuth(account.id, account.provider).catch(() => null)))
+
   return {
     bridge,
     bridgeUrl: getOutlookBridgeUrl(),

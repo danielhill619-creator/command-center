@@ -30,6 +30,11 @@ function fmtTime(iso) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+function FolderCount({ stats }) {
+  if (!stats?.unread) return null
+  return <span className={styles.folderCount}>{stats.unread}</span>
+}
+
 function MailComposer({ title, initial, onSubmit, onClose, busy }) {
   const [to, setTo]           = useState((initial.to ?? []).join(', '))
   const [cc, setCc]           = useState((initial.cc ?? []).join(', '))
@@ -327,6 +332,7 @@ export default function EmailCenter({ mode = 'widget' }) {
           >
             <span className={styles.folderIcon}>📥</span>
             <span className={styles.folderName}>All Inboxes</span>
+            <FolderCount stats={mail.getFolderStats('all', 'Inbox')} />
           </button>
 
           {/* Per-account folder groups */}
@@ -356,6 +362,7 @@ export default function EmailCenter({ mode = 'widget' }) {
                 >
                   <span className={styles.folderIcon}>{FOLDER_ICONS[f]}</span>
                   <span className={styles.folderName}>{f}</span>
+                  <FolderCount stats={mail.getFolderStats(account.id, f)} />
                 </button>
               ))}
             </div>
@@ -441,11 +448,11 @@ export default function EmailCenter({ mode = 'widget' }) {
             )}
             {!mail.loading && !mail.fetchError && mail.messages.length === 0 && staleAccounts.length > 0 && (
               <div className={styles.listError}>
-                {staleAccounts.length === 1 ? 'A connected account needs to be reauthenticated.' : 'Some connected accounts need to be reauthenticated.'}
+                {staleAccounts.length === 1 ? 'A connected account session needs repair.' : 'Some connected account sessions need repair.'}
               </div>
             )}
             {!mail.loading && !mail.fetchError && mail.messages.length === 0 && mail.accounts.length > 0 && (
-              <div className={styles.listStatus}>{staleAccounts.length > 0 ? 'Reconnect your Gmail account to load messages.' : 'No messages'}</div>
+              <div className={styles.listStatus}>{staleAccounts.length > 0 ? 'Trying to restore account sessions. Use Reconnect only if this does not clear.' : 'No messages'}</div>
             )}
             {topSpacer > 0 && <div style={{ height: topSpacer }} />}
             {virtualRows.map(msg => (

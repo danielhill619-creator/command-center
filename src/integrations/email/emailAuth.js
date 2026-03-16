@@ -52,8 +52,8 @@ export function markStoredProviderAuthInvalid(accountId) {
     ...state[accountId],
     accessToken: null,
     expiresAt: 0,
-    connected: false,
-    lastError: 'Authentication expired. Reconnect this account.',
+    connected: true,
+    lastError: 'Session expired. Attempting silent refresh.',
   }
   writeStore(state)
   return state[accountId]
@@ -90,6 +90,7 @@ export async function connectGoogleMailAccount(accountId) {
     email: result.user.email,
     name: result.user.displayName,
     connected: true,
+    lastError: '',
   })
 
   return record
@@ -134,6 +135,7 @@ export async function connectMicrosoftMailAccount(accountId) {
     name: login.account.name,
     homeAccountId: login.account.homeAccountId,
     connected: true,
+    lastError: '',
   })
 
   return record
@@ -151,7 +153,41 @@ export async function refreshMicrosoftMailToken(accountId) {
     accessToken: token.accessToken,
     expiresAt: token.expiresOn?.getTime() ?? (Date.now() + 3600 * 1000),
     connected: true,
+    lastError: '',
   })
+}
+
+export async function ensureStoredProviderAuth(accountId, provider) {
+  const stored = getStoredProviderAuth(accountId)
+  if (!stored) return null
+
+  if (stored.accessToken && stored.expiresAt && stored.expiresAt > Date.now() + 30_000) {
+    if (stored.lastError) {
+      return upsertAccount(accountId, { connected: true, lastError: '' })
+    }
+    return stored
+  }
+
+  if (provider === 'microsoft') {
+    try {
+      return await refreshMicrosoftMailToken(accountId)
+    } catch {
+      return stored
+    }
+  }
+
+  try {
+    const fresh = await getFirebaseGoogleToken()
+    if (!fresh) return stored
+    return upsertAccount(accountId, {
+      accessToken: fresh,
+      expiresAt: Date.now() + 3600 * 1000,
+      connected: true,
+      lastError: '',
+    })
+  } catch {
+    return stored
+  }
 }
 
 export async function getLiveAccessToken(account) {
@@ -174,6 +210,8 @@ export async function getLiveAccessToken(account) {
       upsertAccount(account.id, {
         accessToken: fresh,
         expiresAt: Date.now() + 3600 * 1000,
+        connected: true,
+        lastError: '',
       })
       return fresh
     }
@@ -203,7 +241,9 @@ async function getFirebaseGoogleToken() {
         r.onerror   = () => rej(r.error)
       })
       const token =
-        record?.value?.credential?.oauthAccessToken ?? null
+        record?.value?.credential?.oauthAccessToken ??
+        record?.value?.stsTokenManager?.accessToken ??
+        null
       if (token) return token
     }
     return null

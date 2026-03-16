@@ -177,6 +177,26 @@
 .folderIcon { font-size: 13px; flex-shrink: 0; }
 .folderName { overflow: hidden; text-overflow: ellipsis; }
 
+.folderCount {
+  margin-left: auto;
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(15,108,189,0.16);
+  border: 1px solid rgba(98,176,245,0.24);
+  color: #a7d2ff;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.folderItemActive .folderCount {
+  background: rgba(98,176,245,0.2);
+  border-color: rgba(98,176,245,0.32);
+  color: #d8ecff;
+}
+
 .addAcctBtn {
   margin: 12px 10px 4px;
   padding: 6px 12px;
