@@ -313,7 +313,7 @@ export default function EmailCenter({ mode = 'widget' }) {
   return (
     <div className={`${styles.shell} ${mode === 'workspace' ? styles.shellWorkspace : ''}`}>
       <div
-        className={`${styles.layout} ${mode === 'workspace' ? styles.layoutWorkspace : ''}`}
+        className={`${styles.layout} ${mode === 'workspace' ? styles.layoutWorkspace : ''} ${mail.selectedMessage ? styles.mobileReading : ''}`}
         style={mode === 'workspace' ? { gridTemplateColumns: `${paneSizes.nav}px 8px ${paneSizes.list}px 8px minmax(0, 1fr)` } : undefined}
       >
 
@@ -498,6 +498,9 @@ export default function EmailCenter({ mode = 'widget' }) {
 
         {/* ── Reading pane ── */}
         <div className={styles.readPane}>
+          <button className={styles.mobileBackBtn} onClick={() => { mail.setSelectedId && mail.selectMessage && mail.setAccountId(mail.accountId) ; window.dispatchEvent(new CustomEvent('cc:mail-back')) }}>
+            ← Back to inbox
+          </button>
           {!mail.selectedMessage && (
             <div className={styles.readEmpty}>Select a message to read</div>
           )}

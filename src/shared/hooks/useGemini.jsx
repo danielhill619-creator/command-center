@@ -15,7 +15,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { sendConversation, sendWithTools } from '../../integrations/gemini-api/geminiService'
+import { currentModelSupportsTools, sendConversation, sendWithTools } from '../../integrations/gemini-api/geminiService'
 import { buildFullContext, appendConversation, readContextValue } from '../../integrations/ai-memory/aiMemoryService'
 import { buildRuntimeAppContext } from '../../integrations/gemini-api/appContext'
 import { createEmailToolExecutor, emailToolDeclarations } from '../../integrations/gemini-api/emailTools'
@@ -162,9 +162,21 @@ export function useGemini(world = 'homebase', options = {}) {
 
       // Send full history + new message
       const history = [...chatHistory, userTurn].map(t => ({ role: t.role, text: t.text }))
-      const response = email
-        ? await sendWithTools(systemWithCtx, history, emailToolDeclarations, createEmailToolExecutor(email))
-        : await sendConversation(systemWithCtx, history)
+
+      let response
+      if (email && currentModelSupportsTools()) {
+        // Gemini models: use function calling for live mailbox access
+        response = await sendWithTools(systemWithCtx, history, emailToolDeclarations, createEmailToolExecutor(email))
+      } else if (email) {
+        // Gemma models: no function calling — serialize email context as plain text
+        const emailSummary = buildEmailContextText(email)
+        const systemWithEmail = emailSummary
+          ? `${systemWithCtx}\n\n=== LIVE MAILBOX SNAPSHOT ===\n${emailSummary}`
+          : systemWithCtx
+        response = await sendConversation(systemWithEmail, history)
+      } else {
+        response = await sendConversation(systemWithCtx, history)
+      }
 
       const assistantTurn = { role: 'model', text: response }
       setChatHistory(prev => [...prev, assistantTurn])
@@ -213,4 +225,17 @@ export function useGemini(world = 'homebase', options = {}) {
     triggerBriefing,
     ready: readyState,
   }
+}
+
+function buildEmailContextText(email) {
+  if (!email?.messages?.length) return ''
+  const lines = [`Accounts: ${(email.accounts || []).map(a => a.address || a.label).join(', ')}`]
+  const recent = email.messages.slice(0, 20)
+  lines.push(`Recent messages (${recent.length}):`)
+  recent.forEach((m, i) => {
+    const read = m.read ? '' : ' [UNREAD]'
+    const star = m.starred ? ' ★' : ''
+    lines.push(`${i + 1}. ${m.folder} | From: ${m.from} | Subject: ${m.subject}${read}${star} | ${new Date(m.receivedAt).toLocaleDateString()}`)
+  })
+  return lines.join('\n')
 }

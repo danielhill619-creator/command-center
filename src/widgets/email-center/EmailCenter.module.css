@@ -30,6 +30,86 @@
   grid-template-columns: 240px 8px 360px 8px 1fr;
 }
 
+/* ── Mobile single-panel layout ── */
+@media (max-width: 860px) {
+  .layout,
+  .layoutWorkspace {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .paneHandle { display: none; }
+
+  .nav {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    max-height: 44vh;
+    overflow-y: auto;
+  }
+
+  .listCol {
+    border-right: none;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .readPane {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* When a message is selected on mobile, hide nav + list, show only reading pane */
+  .layout.mobileReading .nav,
+  .layout.mobileReading .listCol {
+    display: none;
+  }
+
+  .layout.mobileReading .readPane {
+    display: flex;
+  }
+
+  /* When no message selected, hide empty reading pane */
+  .layout:not(.mobileReading) .readPane {
+    display: none;
+  }
+
+  .readHeader {
+    padding: 10px 14px 10px;
+  }
+
+  .readSubject {
+    font-size: 15px;
+  }
+
+  .readActions {
+    gap: 5px;
+  }
+
+  .readActionBtn {
+    font-size: 11px;
+    padding: 4px 9px;
+  }
+
+  .mobileBackBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #62b0f5;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 10px 14px 4px;
+  }
+}
+
+@media (min-width: 861px) {
+  .mobileBackBtn { display: none; }
+}
+
 .paneHandle {
   width: 8px;
   cursor: col-resize;

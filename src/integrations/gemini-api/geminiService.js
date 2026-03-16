@@ -23,6 +23,15 @@ function isToolCapableModel(model) {
   return /gemini|gemma|deep-research|computer-use/i.test(name)
 }
 
+/**
+ * Returns true if the currently selected model supports function/tool calling.
+ * Gemma models support generateContent but NOT tool declarations via the Gemini API.
+ */
+export function currentModelSupportsTools() {
+  const name = getGeminiModel()
+  return !/^gemma/i.test(name)
+}
+
 function getGeminiModel() {
   return localStorage.getItem(MODEL_STORAGE_KEY) || DEFAULT_GEMINI_MODEL
 }
