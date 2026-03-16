@@ -68,6 +68,24 @@
 }
 .reloadBtn:hover { color: #0096ff; }
 
+.settingsBtn {
+  font-size: 15px;
+  color: rgba(255,255,255,0.4);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.settingsBtn:hover {
+  color: #0096ff;
+  border-color: rgba(0,150,255,0.35);
+  background: rgba(0,150,255,0.08);
+}
+
 /* ── Stats bar ───────────────────────────────────────────────────────────── */
 .statsBar {
   display: flex;

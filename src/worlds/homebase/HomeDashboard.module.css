@@ -1,0 +1,190 @@
+.dashboardShell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.dashboardToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboardLabel {
+  font-family: 'Michroma', 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(0, 200, 255, 0.55);
+}
+
+.toolbarActions {
+  display: flex;
+  gap: 8px;
+}
+
+.toolBtn {
+  font-family: 'Michroma', 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 1.8px;
+  color: rgba(255,255,255,0.88);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.16);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toolBtn:hover {
+  color: #fff;
+  border-color: rgba(0,200,255,0.4);
+  background: rgba(0,200,255,0.08);
+}
+
+.canvas {
+  position: relative;
+  min-height: 900px;
+  background: transparent;
+  border: 1px dashed rgba(255,255,255,0.06);
+}
+
+.card {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  min-height: 200px;
+  background: rgba(0, 0, 0, 0.10);
+  border: 3px solid #00eaff;
+  backdrop-filter: blur(2px);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+
+
+.cardArrange {
+  box-shadow: none;
+  border-color: #5ff6ff;
+}
+
+.cardHeader {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  cursor: grab;
+  background: rgba(255,255,255,0.01);
+  touch-action: none;
+}
+
+.cardHeader:active {
+  cursor: grabbing;
+}
+
+.cardTitle {
+  font-family: 'Michroma', 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 2.6px;
+  color: rgba(255,255,255,0.96);
+}
+
+.dragHint {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: rgba(0,200,255,0.78);
+}
+
+.cardBody {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  padding: 14px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,234,255,0.24) transparent;
+}
+
+.cardBody::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.cardBody::-webkit-scrollbar-thumb {
+  background: rgba(0,234,255,0.24);
+}
+
+.resizeHandle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, transparent 45%, rgba(0,200,255,0.75) 46%, rgba(0,200,255,0.75) 54%, transparent 55%);
+  border: none;
+  cursor: nwse-resize;
+  opacity: 1;
+  z-index: 20;
+  touch-action: none;
+  pointer-events: auto;
+}
+
+.mobileStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mobileStack .card {
+  position: relative;
+  left: auto !important;
+  top: auto !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 220px;
+}
+
+.worldsWrap {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  height: 100%;
+}
+
+.portalBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.003);
+  border: 1px solid color-mix(in srgb, var(--portal-color) 60%, rgba(255,255,255,0.12));
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.portalBtn:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.008);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--portal-color) 24%, transparent);
+}
+
+.portalIcon {
+  font-size: 26px;
+  color: var(--portal-color);
+  filter: drop-shadow(0 0 10px var(--portal-color));
+}
+
+.portalLabel {
+  font-family: 'Michroma', 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}

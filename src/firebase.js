@@ -18,6 +18,9 @@ export const googleProvider = new GoogleAuthProvider()
 googleProvider.addScope('https://www.googleapis.com/auth/spreadsheets')
 googleProvider.addScope('https://www.googleapis.com/auth/drive.file')
 googleProvider.addScope('https://www.googleapis.com/auth/calendar.readonly')
+googleProvider.addScope('https://www.googleapis.com/auth/gmail.readonly')
+googleProvider.addScope('https://www.googleapis.com/auth/gmail.modify')
+googleProvider.addScope('https://www.googleapis.com/auth/gmail.send')
 googleProvider.addScope('https://www.googleapis.com/auth/gmail.compose')
 
 export default app

@@ -1,18 +1,17 @@
 .widget {
-  background: rgba(10, 28, 70, 0.95);
-  border: 1px solid rgba(0, 200, 255, 0.55);
-  border-radius: 4px;
-  padding: 20px;
+  background: transparent;
+  border: none;
+  padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: 'Orbitron', monospace;
+  font-family: 'Michroma', 'Orbitron', monospace;
 }
 
 .label {
   font-size: 9px;
   letter-spacing: 3px;
-  color: #00c8ff;
+  color: #78e6ff;
   margin-bottom: 4px;
 }
 
@@ -25,12 +24,14 @@
 .icon {
   font-size: 36px;
   line-height: 1;
+  filter: brightness(1.18) drop-shadow(0 0 12px rgba(255,255,255,0.25));
 }
 
 .temp {
   font-size: 48px;
   font-weight: 700;
   color: #ffffff;
+  text-shadow: 0 0 18px rgba(255,255,255,0.18);
   line-height: 1;
   letter-spacing: -1px;
 }
@@ -46,7 +47,7 @@
 .desc {
   font-size: 9px;
   letter-spacing: 2px;
-  color: #00c8ff;
+  color: #78e6ff;
   margin-bottom: 4px;
 }
 
@@ -65,7 +66,7 @@
 .key {
   font-size: 8px;
   letter-spacing: 2px;
-  color: rgba(0, 200, 255, 0.8);
+  color: rgba(120, 230, 255, 0.96);
 }
 
 .val {
@@ -77,7 +78,7 @@
 .status {
   font-size: 10px;
   letter-spacing: 2px;
-  color: rgba(0, 200, 255, 0.7);
+  color: rgba(120, 230, 255, 0.96);
   text-align: center;
   padding: 20px 0;
 }
@@ -92,13 +93,13 @@
 
 .noKeyIcon {
   font-size: 24px;
-  color: rgba(0, 200, 255, 0.6);
+  color: rgba(120, 230, 255, 0.96);
 }
 
 .noKeyText {
   font-family: 'Exo 2', system-ui, sans-serif;
   font-size: 10px;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.88);
   text-align: center;
 }

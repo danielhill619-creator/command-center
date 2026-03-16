@@ -1,63 +1,178 @@
-/* ═══════════════════════════════════════════════════════════════
-   Q.U.B.E. — CRT Phosphor Terminal Face
-   Green phosphor, scanlines, flicker, the whole deal.
-   ═══════════════════════════════════════════════════════════════ */
+/* ============================================================
+   AriaFace — 3D Holographic AI Face
+   ============================================================ */
 
 .container {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  user-select: none;
-  /* Screen flicker */
-  animation: crtFlicker 9s ease-in-out infinite;
 }
 
-/* ── Sizes ── */
-.sm  { width: 72px;  height: 72px;  }
-.md  { width: 150px; height: 150px; }
+.sm  { width: 78px;  height: 78px;  }
+.md  { width: 156px; height: 156px; }
 .xl  { width: 240px; height: 240px; }
 
-/* ── SVG fills the container ── */
 .svg {
   width: 100%;
   height: 100%;
   display: block;
 }
 
-/* ── CRT outer glow ── */
+/* Outer ambient hologram glow halo */
 .container::before {
   content: '';
   position: absolute;
-  inset: -4px;
-  border-radius: 10px;
-  background: radial-gradient(ellipse at center,
-    rgba(0,255,65,0.12) 0%,
-    transparent 70%
+  inset: -12%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(0, 217, 255, 0.13),
+    transparent 65%
+  );
+  filter: blur(20px);
+  pointer-events: none;
+  animation: ambientPulse 3.5s ease-in-out infinite;
+}
+
+/* CSS scanline overlay on entire component */
+.container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 217, 255, 0.035) 3px,
+    rgba(0, 217, 255, 0.035) 4px
   );
   pointer-events: none;
-  z-index: -1;
+  animation: scanlineScroll 10s linear infinite;
 }
 
-/* ── Warning mood: amber tint ── */
-.warning {
-  filter: sepia(1) saturate(4) hue-rotate(18deg) brightness(0.95);
-  animation: crtFlicker 4s ease-in-out infinite;
+/* ===================== TYPOGRAPHY ===================== */
+
+.svgLabel {
+  font-family: 'Orbitron', 'Michroma', monospace;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
 }
 
-/* ── Thinking: faster flicker ── */
+.svgHud {
+  font-family: 'Orbitron', monospace;
+  font-size: 5.5px;
+  letter-spacing: 1.8px;
+  opacity: 0.88;
+}
+
+.svgMicro {
+  font-family: 'Orbitron', monospace;
+  font-size: 4.5px;
+  letter-spacing: 0.8px;
+}
+
+/* ===================== RING SPIN ANIMATIONS ===================== */
+
+.ring1 {
+  animation: dashSpin1 7s linear infinite;
+}
+
+.ring2 {
+  animation: dashSpin2 12s linear infinite reverse;
+}
+
+/* ===================== SCAN SWEEP ===================== */
+
+/* A bright horizontal bar that slowly sweeps down the face */
+.scanSweep {
+  animation: sweepDown 5s ease-in-out infinite;
+}
+
+/* ===================== MOOD STATES ===================== */
+
 .thinking {
-  animation: crtFlicker 3s ease-in-out infinite;
+  animation: holoPulse 2.2s ease-in-out infinite;
 }
 
-/* ── CRT flicker animation ── */
-@keyframes crtFlicker {
-  0%, 100% { opacity: 1; }
-  91%  { opacity: 1; }
-  92%  { opacity: 0.92; }
-  93%  { opacity: 1; }
-  96%  { opacity: 0.86; }
-  97%  { opacity: 1; }
+.speaking {
+  animation: holoFloat 3s ease-in-out infinite;
+}
+
+.warning {
+  animation: holoGlitch 0.35s ease-in-out infinite;
+  filter: hue-rotate(-18deg) saturate(1.45);
+}
+
+.upbeat {
+  filter: brightness(1.09) saturate(1.12);
+}
+
+.calm {
+  filter: saturate(0.72) brightness(0.9);
+  animation: holoBreathe 5.5s ease-in-out infinite;
+}
+
+.focused {
+  animation: holoFocus 1.8s ease-in-out infinite;
+}
+
+/* ===================== KEYFRAMES ===================== */
+
+@keyframes ambientPulse {
+  0%, 100% { opacity: 0.65; transform: scale(1);    }
+  50%       { opacity: 1;    transform: scale(1.05); }
+}
+
+@keyframes scanlineScroll {
+  from { background-position: 0 0;     }
+  to   { background-position: 0 -48px; }
+}
+
+@keyframes dashSpin1 {
+  from { stroke-dashoffset: 0;    }
+  to   { stroke-dashoffset: -420; }
+}
+
+@keyframes dashSpin2 {
+  from { stroke-dashoffset: 0;   }
+  to   { stroke-dashoffset: 360; }
+}
+
+@keyframes sweepDown {
+  0%   { transform: translateY(16px);  opacity: 0;    }
+  8%   { opacity: 0.55; }
+  88%  { opacity: 0.25; }
+  100% { transform: translateY(170px); opacity: 0;    }
+}
+
+@keyframes holoPulse {
+  0%, 100% { opacity: 0.88; transform: scale(1);     }
+  50%       { opacity: 1;    transform: scale(1.018); }
+}
+
+@keyframes holoFloat {
+  0%, 100% { transform: translateY(0);    }
+  50%       { transform: translateY(-2px); }
+}
+
+@keyframes holoGlitch {
+  0%   { transform: translateX(0);    filter: hue-rotate(-18deg) saturate(1.45); }
+  18%  { transform: translateX(-2px); filter: hue-rotate(15deg)  saturate(1.7);  }
+  36%  { transform: translateX(2px);  }
+  54%  { transform: translateX(-1px); filter: hue-rotate(-30deg) saturate(1.5);  }
+  72%  { transform: translateX(1.5px);}
+  100% { transform: translateX(0);    filter: hue-rotate(-18deg) saturate(1.45); }
+}
+
+@keyframes holoBreathe {
+  0%, 100% { opacity: 0.82; }
+  50%       { opacity: 1;    }
+}
+
+@keyframes holoFocus {
+  0%, 100% { filter: brightness(1);    }
+  50%       { filter: brightness(1.06) drop-shadow(0 0 4px rgba(0, 234, 255, 0.6)); }
 }

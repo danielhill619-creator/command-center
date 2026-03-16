@@ -1,54 +1,15 @@
 import { useState, useEffect, useRef } from 'react'
+import useHeadlines from '../../shared/hooks/useHeadlines'
 import styles from './NewsReel.module.css'
-
-const RSS2JSON = 'https://api.rss2json.com/v1/api.json'
-
-const FEEDS = [
-  'https://feeds.bbci.co.uk/news/rss.xml',
-  'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
-]
 
 const DEFAULT_COUNT = 5
 
-async function fetchFeed(url) {
-  const res = await fetch(`${RSS2JSON}?rss_url=${encodeURIComponent(url)}&count=10`)
-  const data = await res.json()
-  return (data.items ?? []).map(item => ({
-    title:     item.title,
-    link:      item.link,
-    pub:       item.pubDate,
-    thumbnail: item.thumbnail || item.enclosure?.link || null,
-  }))
-}
-
 export default function NewsReel() {
-  const [headlines, setHeadlines] = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState(false)
-  const [expanded, setExpanded]   = useState(false)
+  const { headlines, loading, error } = useHeadlines()
+  const [expanded, setExpanded] = useState(false)
   const scrollRef = useRef(null)
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const results = await Promise.allSettled(FEEDS.map(fetchFeed))
-        const all = results
-          .filter(r => r.status === 'fulfilled')
-          .flatMap(r => r.value)
-          .slice(0, 20)
-        setHeadlines(all)
-      } catch {
-        setError(true)
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-    const id = setInterval(load, 15 * 60 * 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  // Auto-scroll only when collapsed (expanded = user-controlled)
+  // Auto-scroll only when collapsed
   useEffect(() => {
     if (!scrollRef.current || headlines.length === 0 || expanded) return
     const el = scrollRef.current
@@ -61,7 +22,7 @@ export default function NewsReel() {
     return () => clearInterval(id)
   }, [headlines, expanded])
 
-  const visible  = expanded ? headlines : headlines.slice(0, DEFAULT_COUNT)
+  const visible     = expanded ? headlines : headlines.slice(0, DEFAULT_COUNT)
   const hiddenCount = headlines.length - DEFAULT_COUNT
 
   return (
@@ -106,10 +67,7 @@ export default function NewsReel() {
               className={styles.expandBtn}
               onClick={() => setExpanded(e => !e)}
             >
-              {expanded
-                ? '▲ SHOW LESS'
-                : `▼ +${hiddenCount} MORE STORIES`
-              }
+              {expanded ? '▲ SHOW LESS' : `▼ +${hiddenCount} MORE STORIES`}
             </button>
           )}
         </>

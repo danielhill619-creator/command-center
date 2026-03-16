@@ -35,10 +35,6 @@ export default function SystemMonitor() {
       <div className={styles.date}>{dateStr}</div>
       <div className={styles.divider} />
       <div className={styles.row}>
-        <span className={styles.key}>SESSION</span>
-        <span className={styles.val}>{getUptime(SESSION_START)}</span>
-      </div>
-      <div className={styles.row}>
         <span className={styles.key}>STATUS</span>
         <span className={styles.online}>ONLINE</span>
       </div>

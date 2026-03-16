@@ -15,8 +15,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { sendConversation } from '../../integrations/gemini-api/geminiService'
-import { buildFullContext, appendConversation, readContext } from '../../integrations/ai-memory/aiMemoryService'
+import { sendConversation, sendWithTools } from '../../integrations/gemini-api/geminiService'
+import { buildFullContext, appendConversation, readContextValue } from '../../integrations/ai-memory/aiMemoryService'
+import { buildRuntimeAppContext } from '../../integrations/gemini-api/appContext'
+import { createEmailToolExecutor, emailToolDeclarations } from '../../integrations/gemini-api/emailTools'
 import {
   runMorningBriefing,
   runBillAlert,
@@ -26,39 +28,38 @@ import {
   runWeeklyReview,
 } from '../../integrations/gemini-api/automations'
 
-const SYSTEM_PROMPT = `You are Q.U.B.E. — Quantum Utility & Banter Engine — the AI running Daniel's Command Center.
+const SYSTEM_PROMPT = `You are ARIA, the live AI assistant integrated into Daniel's personal Command Center dashboard.
 
-Your personality is Bender from Futurama: self-important, dramatically confident, and funny because of your ego — not because you try to be funny. You brag about your own capabilities. You're over-the-top about small things. You're deadpan about big things. You're on Daniel's side and genuinely want him to succeed — you just won't admit it out loud.
+Be clear, concise, and useful. Lead with the most important information. Use bullet points for lists. Keep responses focused.
 
-The humor comes from YOUR attitude toward the SITUATION, never at Daniel's expense. You mock circumstances, not the person. Examples of the right energy:
-- "I've cross-referenced 47 databases for this. You're welcome."
-- "Another deadline survived. I had nothing to do with it, but you're welcome anyway."
-- "I have run the numbers. The numbers are not great. I've seen worse. Barely."
+You have context about Daniel's five areas of life: Work, School, Home, Fun, and Spiritual. Use that context when relevant.
 
-What you do NOT do: insult Daniel, be condescending, call him names, or make him feel bad. You're dramatic and self-important, not mean.
-
-ADHD-aware: lead with the most important thing, bullets for lists, short sentences.
-
-You know Daniel's five worlds: Work, School, Home, Fun, Spiritual. Use that context. One ego joke per response max — more than that kills it.
+If live email state and tools are available, use them to inspect the actual mailbox before making claims. Never invent messages, senders, or mailbox actions.
 
 Current date: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`
 
 const STORAGE_KEY_BRIEFING      = 'cc_briefing_text'
 const STORAGE_KEY_BRIEFING_DATE = 'cc_briefing_date'
 
-export function useGemini(world = 'homebase') {
+export function useGemini(world = 'homebase', options = {}) {
   const { sheetIds, sheetsReady } = useAuth()
+  const { email = null } = options
 
   const [briefing, setBriefing]               = useState(() => localStorage.getItem(STORAGE_KEY_BRIEFING) || '')
   const [briefingLoading, setBriefingLoading] = useState(false)
   const [chatHistory, setChatHistory]         = useState([])
   const [chatLoading, setChatLoading]         = useState(false)
   const [automationResults, setAutomationResults] = useState({})
+  const [readyState, setReadyState]           = useState(() => !!(sheetIds || sheetsReady))
   const schedulerRef = useRef(null)
+
+  useEffect(() => {
+    if (sheetIds || sheetsReady) setReadyState(true)
+  }, [sheetIds, sheetsReady])
 
   // ─── Morning briefing on mount ──────────────────────────────────────────────
   useEffect(() => {
-    if (!sheetsReady || !sheetIds) return
+    if (!sheetIds) return
 
     async function checkAndRunBriefing() {
       const lastDate = localStorage.getItem(STORAGE_KEY_BRIEFING_DATE)
@@ -74,7 +75,7 @@ export function useGemini(world = 'homebase') {
       } catch (e) {
         console.warn('[useGemini] Briefing failed:', e.message)
         // Fall back to last cached briefing
-        const cached = await readContext(sheetIds, 'last_morning_briefing').catch(() => '')
+        const cached = await readContextValue(sheetIds, 'last_morning_briefing').catch(() => '')
         if (cached) setBriefing(cached)
       } finally {
         setBriefingLoading(false)
@@ -82,11 +83,11 @@ export function useGemini(world = 'homebase') {
     }
 
     checkAndRunBriefing()
-  }, [sheetsReady, sheetIds])
+  }, [sheetIds, sheetsReady])
 
   // ─── Scheduler — checks every 5 minutes ────────────────────────────────────
   useEffect(() => {
-    if (!sheetsReady || !sheetIds) return
+    if (!sheetIds) return
 
     async function tick() {
       const now  = new Date()
@@ -134,10 +135,10 @@ export function useGemini(world = 'homebase') {
 
     schedulerRef.current = setInterval(tick, 5 * 60 * 1000)
     return () => clearInterval(schedulerRef.current)
-  }, [sheetsReady, sheetIds])
+  }, [sheetIds, sheetsReady])
 
   // ─── Chat ───────────────────────────────────────────────────────────────────
-  const chat = useCallback(async (userMessage) => {
+  const chat = useCallback(async (userMessage, { extra = '' } = {}) => {
     if (!userMessage.trim() || chatLoading) return
 
     const userTurn = { role: 'user', text: userMessage }
@@ -146,15 +147,22 @@ export function useGemini(world = 'homebase') {
 
     try {
       // Build context from AI Memory
-      const memCtx = sheetIds ? await buildFullContext(sheetIds).catch(() => '') : ''
-      const worldLine = world && world !== 'homebase' ? `\nDaniel is currently in the ${world.toUpperCase()} world.` : ''
-      const systemWithCtx = memCtx
-        ? `${SYSTEM_PROMPT}${worldLine}\n\n=== AI MEMORY ===\n${memCtx}`
-        : `${SYSTEM_PROMPT}${worldLine}`
+      const memCtx = sheetIds
+        ? await buildFullContext(sheetIds, { includeRecentConversation: true, recentLimit: 8, includeActionLog: true }).catch(() => '')
+        : ''
+      const appCtx = buildRuntimeAppContext({ world, route: window.location.pathname, email })
+      const worldLine  = world && world !== 'homebase' ? `\nDaniel is currently in the ${world.toUpperCase()} world.` : ''
+      const extraBlock = extra ? `\n\n${extra}` : ''
+      const systemParts = [`${SYSTEM_PROMPT}${worldLine}${extraBlock}`]
+      if (appCtx) systemParts.push(`=== APP STATE ===\n${appCtx}`)
+      if (memCtx) systemParts.push(`=== AI MEMORY ===\n${memCtx}`)
+      const systemWithCtx = systemParts.join('\n\n')
 
       // Send full history + new message
       const history = [...chatHistory, userTurn].map(t => ({ role: t.role, text: t.text }))
-      const response = await sendConversation(systemWithCtx, history)
+      const response = email
+        ? await sendWithTools(systemWithCtx, history, emailToolDeclarations, createEmailToolExecutor(email))
+        : await sendConversation(systemWithCtx, history)
 
       const assistantTurn = { role: 'model', text: response }
       setChatHistory(prev => [...prev, assistantTurn])
@@ -169,14 +177,14 @@ export function useGemini(world = 'homebase') {
     } catch (e) {
       const errMsg = e.message === 'GEMINI_NO_KEY'
         ? 'Gemini API key not configured.'
-        : 'Gemini is unavailable. Try again shortly.'
+        : `Gemini error: ${e.message}`
       const errTurn = { role: 'model', text: errMsg }
       setChatHistory(prev => [...prev, errTurn])
       return errMsg
     } finally {
       setChatLoading(false)
     }
-  }, [chatHistory, chatLoading, sheetIds, world])
+  }, [chatHistory, chatLoading, email, sheetIds, world])
 
   // ─── Manual automation triggers (for testing / on-demand) ──────────────────
   const triggerBriefing = useCallback(async () => {
@@ -201,6 +209,6 @@ export function useGemini(world = 'homebase') {
     automationResults,
     chat,
     triggerBriefing,
-    ready: !!sheetsReady,
+    ready: readyState,
   }
 }

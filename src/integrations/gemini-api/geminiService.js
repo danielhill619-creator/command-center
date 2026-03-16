@@ -1,13 +1,105 @@
 /**
  * Gemini API Service
  *
- * Wraps the Gemini 2.5 Flash REST API.
+ * Wraps the Gemini REST API.
  * All calls go through sendMessage() — pass a system prompt + user message.
  * No SDK dependency — pure fetch.
  */
 
-const GEMINI_MODEL = 'gemini-2.5-flash'
-const GEMINI_BASE  = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
+const MODEL_STORAGE_KEY = 'cc_gemini_model_v1'
+const USAGE_STORAGE_KEY = 'cc_gemini_usage_v1'
+const DEFAULT_GEMINI_MODEL = 'gemini-3.1-flash-lite-preview'
+
+function getGeminiModel() {
+  return localStorage.getItem(MODEL_STORAGE_KEY) || DEFAULT_GEMINI_MODEL
+}
+
+export function getSelectedGeminiModel() {
+  return getGeminiModel()
+}
+
+export function setSelectedGeminiModel(model) {
+  localStorage.setItem(MODEL_STORAGE_KEY, model)
+}
+
+function getGeminiBase() {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${getGeminiModel()}:generateContent`
+}
+
+function readUsageStore() {
+  try {
+    return JSON.parse(localStorage.getItem(USAGE_STORAGE_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function writeUsageStore(value) {
+  localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(value))
+}
+
+function recordUsage(model, usageMetadata = {}) {
+  const store = readUsageStore()
+  const current = store[model] || {
+    requests: 0,
+    promptTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+    lastUsedAt: null,
+    lastError: '',
+  }
+
+  store[model] = {
+    ...current,
+    requests: current.requests + 1,
+    promptTokens: current.promptTokens + (usageMetadata.promptTokenCount || 0),
+    outputTokens: current.outputTokens + (usageMetadata.candidatesTokenCount || 0),
+    totalTokens: current.totalTokens + (usageMetadata.totalTokenCount || 0),
+    lastUsedAt: new Date().toISOString(),
+    lastError: '',
+  }
+
+  writeUsageStore(store)
+}
+
+function recordError(model, errorMessage) {
+  const store = readUsageStore()
+  const current = store[model] || {
+    requests: 0,
+    promptTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+    lastUsedAt: null,
+    lastError: '',
+  }
+
+  store[model] = {
+    ...current,
+    lastError: errorMessage,
+  }
+
+  writeUsageStore(store)
+}
+
+export function getGeminiUsageStats() {
+  return readUsageStore()
+}
+
+export async function listAvailableGeminiModels() {
+  const apiKey = getApiKey()
+  if (!apiKey || apiKey === 'PLACEHOLDER') throw new Error('GEMINI_NO_KEY')
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(`Gemini API error ${res.status}: ${err?.error?.message ?? res.statusText}`)
+  }
+
+  const data = await res.json()
+  return (data.models || [])
+    .filter(model => model.supportedGenerationMethods?.includes('generateContent'))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName))
+}
 
 function getApiKey() {
   return import.meta.env.VITE_GEMINI_API_KEY
@@ -25,6 +117,7 @@ function getApiKey() {
  */
 export async function sendMessage(systemPrompt, userMessage, options = {}) {
   const apiKey = getApiKey()
+  const model = getGeminiModel()
   if (!apiKey || apiKey === 'PLACEHOLDER') {
     throw new Error('GEMINI_NO_KEY')
   }
@@ -47,7 +140,7 @@ export async function sendMessage(systemPrompt, userMessage, options = {}) {
     },
   }
 
-  const res = await fetch(`${GEMINI_BASE}?key=${apiKey}`, {
+  const res = await fetch(`${getGeminiBase()}?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -55,13 +148,78 @@ export async function sendMessage(systemPrompt, userMessage, options = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
+    recordError(model, err?.error?.message ?? res.statusText)
     throw new Error(`Gemini API error ${res.status}: ${err?.error?.message ?? res.statusText}`)
   }
 
   const data = await res.json()
+  recordUsage(model, data?.usageMetadata)
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
   if (!text) throw new Error('Gemini returned empty response')
   return text.trim()
+}
+
+/**
+ * Send a message with tool/function calling support.
+ * Automatically loops through tool call rounds until Gemini returns a text response.
+ *
+ * @param {string}   systemPrompt
+ * @param {Array}    history       - [{role, parts}] format
+ * @param {Array}    tools         - Gemini functionDeclarations array
+ * @param {Function} executeTool   - async (name, args) => result
+ * @returns {Promise<string>}
+ */
+export async function sendWithTools(systemPrompt, history, tools, executeTool) {
+  const apiKey = getApiKey()
+  const model = getGeminiModel()
+  if (!apiKey || apiKey === 'PLACEHOLDER') throw new Error('GEMINI_NO_KEY')
+
+  const contents = history.map(t => ({
+    role: t.role,
+    parts: t.parts ?? [{ text: t.text ?? '' }],
+  }))
+
+  for (let round = 0; round < 8; round++) {
+    const body = {
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents,
+      tools: [{ functionDeclarations: tools }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
+    }
+
+    const res = await fetch(`${getGeminiBase()}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      recordError(model, err?.error?.message ?? res.statusText)
+      throw new Error(`Gemini API error ${res.status}: ${err?.error?.message ?? res.statusText}`)
+    }
+
+    const data = await res.json()
+    recordUsage(model, data?.usageMetadata)
+    const parts = data?.candidates?.[0]?.content?.parts ?? []
+    contents.push({ role: 'model', parts })
+
+    const calls = parts.filter(p => p.functionCall)
+    if (calls.length === 0) {
+      return parts.map(p => p.text ?? '').join('').trim()
+    }
+
+    // Execute all tool calls in parallel, send responses back
+    const responses = await Promise.all(
+      calls.map(async ({ functionCall: { name, args } }) => {
+        const response = await executeTool(name, args ?? {}).catch(e => ({ error: e.message }))
+        return { functionResponse: { name, response } }
+      })
+    )
+    contents.push({ role: 'user', parts: responses })
+  }
+
+  return 'I ran into too many steps completing that. Please try a simpler request.'
 }
 
 /**
@@ -73,6 +231,7 @@ export async function sendMessage(systemPrompt, userMessage, options = {}) {
  */
 export async function sendConversation(systemPrompt, history) {
   const apiKey = getApiKey()
+  const model = getGeminiModel()
   if (!apiKey || apiKey === 'PLACEHOLDER') {
     throw new Error('GEMINI_NO_KEY')
   }
@@ -91,7 +250,7 @@ export async function sendConversation(systemPrompt, history) {
     },
   }
 
-  const res = await fetch(`${GEMINI_BASE}?key=${apiKey}`, {
+  const res = await fetch(`${getGeminiBase()}?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -99,10 +258,12 @@ export async function sendConversation(systemPrompt, history) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
+    recordError(model, err?.error?.message ?? res.statusText)
     throw new Error(`Gemini API error ${res.status}: ${err?.error?.message ?? res.statusText}`)
   }
 
   const data = await res.json()
+  recordUsage(model, data?.usageMetadata)
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
   if (!text) throw new Error('Gemini returned empty response')
   return text.trim()

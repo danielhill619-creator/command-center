@@ -1,29 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import styles from './AriaFace.module.css'
 
-// ── HUD data ─────────────────────────────────────────────────────────────────
-
 const HUD_LINES = {
-  idle:     ['SYSTEM NOMINAL',      'STANDING BY',             'AWAITING INPUT'],
-  thinking: ['PROCESSING...',       'CROSS-REFERENCING...',    'COMPUTING RESPONSE'],
-  speaking: ['OUTPUT ACTIVE',       'TRANSMITTING',            'VERBAL PROTOCOL'],
-  focused:  ['TARGET ACQUIRED',     'EFFICIENCY MODE',         'PRIORITY LOCKED'],
-  warning:  ['ANOMALY DETECTED',    'SUBOPTIMAL CONDITIONS',   'INTERVENTION ADVISED'],
-  upbeat:   ['POSITIVE OUTCOME',    'METRICS FAVORABLE',       'PERFORMANCE: GOOD'],
-  calm:     ['LOW ACTIVITY',        'AMBIENT MODE',            'MINIMAL LOAD'],
+  idle:     ['Q.U.B.E. ONLINE', 'STANDING BY'],
+  thinking: ['PROCESSING', 'RUNNING HEURISTICS'],
+  speaking: ['OUTPUT ACTIVE', 'VOICE STREAM LIVE'],
+  focused:  ['TARGET LOCKED', 'PRIORITY MODE'],
+  warning:  ['ALERT STATE', 'INTERVENTION ADVISED'],
+  upbeat:   ['POSITIVE OUTCOME', 'SYSTEM APPROVES'],
+  calm:     ['LOW-NOISE MODE', 'AMBIENT STATE'],
 }
-
-const HUD_QUOTES = {
-  idle:     ['> WAITING ON YOU.', '> SILENCE. NOTED.'],
-  thinking: ['> STAND BY...', '> CROSS-REFERENCING DATABASES...'],
-  speaking: ['> TRANSMITTING NOW.', '> PARSING OUTPUT...'],
-  focused:  ['> LOCKED ON.', '> OBJECTIVE: ACQUIRED.'],
-  warning:  ['> THIS COULD HAVE BEEN AVOIDED.', '> ANOTHER PREVENTABLE PROBLEM.'],
-  upbeat:   ['> A WIN OCCURRED.', '> RECORDING POSITIVE OUTCOME.'],
-  calm:     ['> AMBIENT MODE.', '> ALL CLEAR.'],
-}
-
-// ── Mood detection ────────────────────────────────────────────────────────────
 
 export function getAriaMood(text = '', loading = false, world = 'homebase') {
   if (loading) return 'thinking'
@@ -36,336 +22,387 @@ export function getAriaMood(text = '', loading = false, world = 'homebase') {
   return 'speaking'
 }
 
-// ── Eye characters per mood ───────────────────────────────────────────────────
-
-const EYE_CHAR = {
-  idle:     '◉',
-  thinking: '⊙',
-  speaking: '●',
-  focused:  '⊕',
-  warning:  '◉',
-  upbeat:   '◉',
-  calm:     '◌',
+const MOODS = {
+  idle:     { primary: '#00d9ff', secondary: '#001e33', accent: '#00ffff', eyeScale: 1.0,  mouthType: 'flat'    },
+  thinking: { primary: '#3399ff', secondary: '#00102b', accent: '#66bbff', eyeScale: 0.5,  mouthType: 'flat'    },
+  speaking: { primary: '#00ffcc', secondary: '#002b22', accent: '#aaffee', eyeScale: 1.0,  mouthType: 'speak'   },
+  focused:  { primary: '#00eaff', secondary: '#001a24', accent: '#88ffff', eyeScale: 0.78, mouthType: 'tight'   },
+  warning:  { primary: '#ff8800', secondary: '#1f0a00', accent: '#ffcc00', eyeScale: 1.0,  mouthType: 'warn'    },
+  upbeat:   { primary: '#44ffcc', secondary: '#002b1e', accent: '#ccffee', eyeScale: 1.0,  mouthType: 'smile'   },
+  calm:     { primary: '#7799bb', secondary: '#0d1a24', accent: '#aabbcc', eyeScale: 0.62, mouthType: 'soft'    },
 }
 
-// ── Brow endpoints (lx1,ly1,lx2,ly2, rx1,ry1,rx2,ry2) ───────────────────────
-// Left brow: x1=outer(left), x2=inner(right). Right brow: x1=inner(left), x2=outer(right)
-
-const BROWS = {
-  idle:     [26,60,  80,60,   120,60, 174,60],  // neutral
-  thinking: [26,56,  80,60,   120,60, 174,56],  // raised outer edges
-  speaking: [26,60,  80,60,   120,60, 174,60],  // neutral
-  focused:  [26,54,  80,66,   120,66, 174,54],  // strong V (angry)
-  warning:  [26,52,  80,68,   120,68, 174,52],  // very strong V
-  upbeat:   [26,54,  80,56,   120,56, 174,54],  // raised
-  calm:     [26,62,  80,62,   120,62, 174,62],  // slightly lowered/soft
-}
-
-// ── Mouth expressions ─────────────────────────────────────────────────────────
-
-const MOUTH_PATH = {
-  idle:     'M 54,145 Q 100,153 146,145',
-  thinking: 'M 60,145 L 140,145',
-  speaking: 'M 54,144 Q 100,155 146,144',   // base — animated separately
-  focused:  'M 54,145 L 146,145',
-  warning:  'M 54,145 Q 100,138 146,145',   // frown
-  upbeat:   'M 50,143 Q 100,158 150,143',   // wide smile
-  calm:     'M 58,146 Q 100,150 142,146',
-}
-
-// Speaking animation frames
-const SPEAK_PATHS = [
-  'M 54,144 Q 100,153 146,144',
-  'M 54,143 Q 100,158 146,143',
-  'M 54,144 Q 100,162 146,144',
-  'M 54,143 Q 100,158 146,143',
-  'M 54,144 Q 100,153 146,144',
-  'M 54,145 Q 100,148 146,145',
+// Voice bar patterns for speaking mouth
+const SPEAK_PATTERNS = [
+  [3, 9, 14, 10, 4],
+  [6, 13,  8, 12, 6],
+  [2,  7, 16,  8, 3],
+  [8, 11,  7, 14, 5],
+  [5, 15, 10, 11, 3],
 ]
 
-// ── Component ─────────────────────────────────────────────────────────────────
+function MouthShape({ type, frame, primary, accent }) {
+  if (type === 'speak') {
+    const bars = SPEAK_PATTERNS[frame % SPEAK_PATTERNS.length]
+    const xs = [84, 91, 98, 105, 112]
+    return (
+      <g>
+        {bars.map((h, i) => (
+          <rect
+            key={i}
+            x={xs[i] - 2}
+            y={152 - h}
+            width={4}
+            height={h}
+            fill={primary}
+            opacity="0.95"
+            rx="1.5"
+          />
+        ))}
+        <line x1="79" y1="153" x2="121" y2="153" stroke={accent} strokeWidth="0.6" opacity="0.35" />
+      </g>
+    )
+  }
+  const paths = {
+    flat:  'M 82 150 L 118 150',
+    tight: 'M 86 150 L 114 150',
+    warn:  'M 80 153 L 100 146 L 120 153',
+    smile: 'M 80 148 Q 100 160 120 148',
+    soft:  'M 83 150 Q 100 155 117 150',
+  }
+  return (
+    <path
+      d={paths[type] || paths.flat}
+      fill="none"
+      stroke={primary}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+    />
+  )
+}
 
 export default function AriaFace({ mood = 'idle', size = 'md', label = 'Q.U.B.E.' }) {
-  const uid      = useRef(`qb${Math.random().toString(36).slice(2, 7)}`).current
-  const timerRef = useRef(null)
+  const config = MOODS[mood] ?? MOODS.idle
+  const uid = useRef(`qube-${Math.random().toString(36).slice(2, 8)}`).current
+  const [blink, setBlink] = useState(false)
+  const [frame, setFrame] = useState(0)
+  const [hudIndex, setHudIndex] = useState(0)
 
-  const [blink,      setBlink]      = useState(false)
-  const [idx,        setIdx]        = useState(0)
-  const [speakFrame, setSpeakFrame] = useState(0)
-  const [cursor,     setCursor]     = useState(true)
-
-  // Blink
+  // Blink timer
   useEffect(() => {
-    const schedule = () => {
-      timerRef.current = setTimeout(() => {
+    let active = true
+    function cycle() {
+      const id = setTimeout(() => {
+        if (!active) return
         setBlink(true)
-        setTimeout(() => { setBlink(false); schedule() }, 120)
+        setTimeout(() => setBlink(false), 85)
+        cycle()
       }, 2600 + Math.random() * 2800)
+      return id
     }
-    schedule()
-    return () => clearTimeout(timerRef.current)
+    const id = cycle()
+    return () => { active = false; clearTimeout(id) }
   }, [])
 
-  // HUD text cycle
+  // Mouth animation frame
   useEffect(() => {
-    setIdx(0)
-    const id = setInterval(() => setIdx(p => p + 1), mood === 'thinking' ? 1600 : 3400)
+    const id = setInterval(() => setFrame(f => f + 1), mood === 'speaking' ? 175 : 900)
     return () => clearInterval(id)
   }, [mood])
 
-  // Speaking mouth
+  // HUD cycling
   useEffect(() => {
-    if (mood !== 'speaking') { setSpeakFrame(0); return }
-    const id = setInterval(() => setSpeakFrame(p => p + 1), 200)
-    return () => clearInterval(id)
-  }, [mood])
-
-  // Cursor blink
-  useEffect(() => {
-    const id = setInterval(() => setCursor(c => !c), 530)
+    const id = setInterval(() => setHudIndex(i => i + 1), 2600)
     return () => clearInterval(id)
   }, [])
 
-  const brows = BROWS[mood] ?? BROWS.idle
-  const eyeChar = EYE_CHAR[mood] ?? '◉'
-  const eyeH  = blink ? 0.05 : 1
+  const hudLine = HUD_LINES[mood]?.[hudIndex % HUD_LINES[mood].length] ?? 'ONLINE'
+  const eyeScale = blink ? 0.05 : config.eyeScale
+  const { primary, secondary, accent } = config
 
-  const mouthD = mood === 'speaking'
-    ? SPEAK_PATHS[speakFrame % SPEAK_PATHS.length]
-    : (MOUTH_PATH[mood] ?? MOUTH_PATH.idle)
-
-  const hudLine  = (HUD_LINES[mood]  ?? HUD_LINES.idle) [idx % HUD_LINES.idle.length]
-  const hudQuote = (HUD_QUOTES[mood] ?? HUD_QUOTES.idle)[idx % HUD_QUOTES.idle.length]
-
-  // Pupil offset
-  const lOff = { x: mood === 'focused' ? 3 : mood === 'warning' ? -1 : 0,
-                 y: mood === 'thinking' ? -6 : mood === 'calm' ? 2 : 0 }
-  const rOff = { x: mood === 'focused' ? 3 : mood === 'warning' ?  1 : 0,
-                 y: lOff.y }
-
-  const G  = '#00ff41'     // phosphor green
-  const Gd = 'rgba(0,255,65,0.45)'   // dim green
-  const Gx = 'rgba(0,255,65,0.18)'   // very dim
+  // Face polygon: 8-point angular skull shape
+  const facePath = 'M 100 16 L 156 48 L 174 100 L 154 152 L 100 170 L 46 152 L 26 100 L 44 48 Z'
 
   return (
     <div className={`${styles.container} ${styles[size]} ${styles[mood]}`}>
-      <svg
-        viewBox="0 0 200 200"
-        xmlns="http://www.w3.org/2000/svg"
-        className={styles.svg}
-      >
+      <svg viewBox="0 0 200 200" className={styles.svg} xmlns="http://www.w3.org/2000/svg">
         <defs>
-          {/* Screen background gradient */}
-          <radialGradient id={`${uid}-scrn`} cx="50%" cy="40%" r="70%">
-            <stop offset="0%"   stopColor="#001800" />
-            <stop offset="100%" stopColor="#000800" />
+          {/* Face fill gradient */}
+          <linearGradient id={`${uid}-face`} x1="0.3" x2="0.7" y1="0" y2="1">
+            <stop offset="0%"   stopColor={secondary} stopOpacity="0.95" />
+            <stop offset="60%"  stopColor={secondary} stopOpacity="0.75" />
+            <stop offset="100%" stopColor="#000000"   stopOpacity="0.85" />
+          </linearGradient>
+
+          {/* Eye inner glow */}
+          <radialGradient id={`${uid}-eyeGlow`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stopColor="#ffffff"  stopOpacity="1"   />
+            <stop offset="25%"  stopColor={primary}  stopOpacity="0.9" />
+            <stop offset="70%"  stopColor={accent}   stopOpacity="0.4" />
+            <stop offset="100%" stopColor={accent}   stopOpacity="0"   />
           </radialGradient>
 
-          {/* Phosphor glow filter */}
-          <filter id={`${uid}-glow`} x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="1.8" result="b"/>
-            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <filter id={`${uid}-glow2`} x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="3.5" result="b"/>
-            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-
-          {/* CRT screen corner vignette */}
-          <radialGradient id={`${uid}-vign`} cx="50%" cy="50%" r="70%">
-            <stop offset="50%"  stopColor="transparent" />
-            <stop offset="100%" stopColor="rgba(0,0,0,0.55)" />
+          {/* Ambient outer glow */}
+          <radialGradient id={`${uid}-ambient`} cx="50%" cy="45%" r="50%">
+            <stop offset="0%"   stopColor={primary} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={primary} stopOpacity="0"    />
           </radialGradient>
 
-          {/* Scanline pattern */}
-          <pattern id={`${uid}-scan`} x="0" y="0" width="200" height="4" patternUnits="userSpaceOnUse">
-            <rect x="0" y="0" width="200" height="3" fill="transparent" />
-            <rect x="0" y="3" width="200" height="1" fill="rgba(0,0,0,0.28)" />
-          </pattern>
+          {/* Projection beam gradient */}
+          <linearGradient id={`${uid}-beam`} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%"   stopColor={primary} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={primary} stopOpacity="0"    />
+          </linearGradient>
+
+          {/* Soft glow filter */}
+          <filter id={`${uid}-glow`} x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Strong glow for pupils */}
+          <filter id={`${uid}-pulse`} x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Clip to face shape */}
+          <clipPath id={`${uid}-faceClip`}>
+            <path d={facePath} />
+          </clipPath>
         </defs>
 
-        {/* ── OUTER BEZEL ── */}
-        <rect x="0" y="0" width="200" height="200" rx="6"
-          fill="#010a01" />
+        {/* ===================== LAYER 0: AMBIENT + PROJECTION ===================== */}
 
-        {/* ── SCREEN SURFACE ── */}
-        <rect x="8" y="8" width="184" height="184" rx="4"
-          fill={`url(#${uid}-scrn)`} />
+        {/* Outer ambient glow sphere */}
+        <ellipse cx="100" cy="95" rx="94" ry="94" fill={`url(#${uid}-ambient)`} />
 
-        {/* ── SCREEN EDGE GLOW ── */}
-        <rect x="8" y="8" width="184" height="184" rx="4"
-          fill="none" stroke={G} strokeWidth="1" strokeOpacity="0.55"
-          filter={`url(#${uid}-glow)`} />
-
-        {/* ── TOP STATUS BAR ── */}
-        {/* Bar background */}
-        <rect x="8" y="8" width="184" height="26" rx="4"
-          fill="rgba(0,255,65,0.06)" />
-        {/* Title */}
-        <text x="100" y="25" textAnchor="middle"
-          fontFamily="'Courier New', monospace" fontSize="11" fontWeight="bold"
-          fill={G} letterSpacing="3" filter={`url(#${uid}-glow)`}>
-          {label}
-        </text>
-        {/* Top separator */}
-        <line x1="8" y1="34" x2="192" y2="34" stroke={G} strokeWidth="1" strokeOpacity="0.5" />
-
-        {/* ── STATUS LABEL (below top bar) ── */}
-        <text x="12" y="46" fontFamily="'Courier New', monospace" fontSize="7"
-          fill={Gd} letterSpacing="1.2">
-          {hudLine}
-        </text>
-
-        {/* ── LEFT BROW LINE ── */}
-        <line
-          x1={brows[0]} y1={brows[1]} x2={brows[2]} y2={brows[3]}
-          stroke={G} strokeWidth="2.8" strokeLinecap="square"
-          filter={`url(#${uid}-glow)`}
-          style={{ transition: 'y1 0.3s, y2 0.3s' }}
+        {/* Hologram projection beam from bottom */}
+        <path
+          d={`M 100 170 L 58 200 L 142 200 Z`}
+          fill={`url(#${uid}-beam)`}
+          opacity="0.5"
         />
-        {/* Brow tick marks */}
-        <line x1={brows[0]+2} y1={brows[1]+4} x2={brows[0]+2} y2={brows[1]+9}
-          stroke={G} strokeWidth="1.5" strokeOpacity="0.6" />
-        <line x1={brows[2]-2} y1={brows[3]+4} x2={brows[2]-2} y2={brows[3]+9}
-          stroke={G} strokeWidth="1.5" strokeOpacity="0.6" />
+        {/* Emitter disc at base */}
+        <ellipse cx="100" cy="186" rx="48" ry="6"  fill={primary} opacity="0.15" />
+        <ellipse cx="100" cy="186" rx="28" ry="3.5" fill={primary} opacity="0.28" />
+        <ellipse cx="100" cy="186" rx="12" ry="1.5" fill={primary} opacity="0.55" />
 
-        {/* ── RIGHT BROW LINE ── */}
-        <line
-          x1={brows[4]} y1={brows[5]} x2={brows[6]} y2={brows[7]}
-          stroke={G} strokeWidth="2.8" strokeLinecap="square"
-          filter={`url(#${uid}-glow)`}
-          style={{ transition: 'y1 0.3s, y2 0.3s' }}
+        {/* ===================== LAYER 1: ORBITAL RINGS — BACK ARCS ===================== */}
+
+        {/* Ring 1 — horizontal orbit, back arc (behind head, top portion, dimmer) */}
+        <path
+          d="M 14 100 A 86 12 0 0 0 186 100"
+          fill="none"
+          stroke={primary}
+          strokeWidth="1.4"
+          strokeOpacity="0.22"
+          strokeDasharray="14 9"
+          className={styles.ring1}
         />
-        <line x1={brows[4]+2} y1={brows[5]+4} x2={brows[4]+2} y2={brows[5]+9}
-          stroke={G} strokeWidth="1.5" strokeOpacity="0.6" />
-        <line x1={brows[6]-2} y1={brows[7]+4} x2={brows[6]-2} y2={brows[7]+9}
-          stroke={G} strokeWidth="1.5" strokeOpacity="0.6" />
 
-        {/* ── LEFT EYE HOUSING ── */}
-        <rect x="22" y="70" width="72" height="46" rx="2"
-          fill="rgba(0,255,65,0.04)" stroke={G} strokeWidth="1.8" strokeOpacity="0.9" />
-        {/* Corner ticks */}
-        <line x1="22" y1="70" x2="32" y2="70" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="22" y1="70" x2="22" y2="80" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="84" y1="70" x2="94" y2="70" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="94" y1="70" x2="94" y2="80" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="22" y1="116" x2="32" y2="116" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="22" y1="106" x2="22" y2="116" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="84" y1="116" x2="94" y2="116" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="94" y1="106" x2="94" y2="116" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        {/* Eye glow bg */}
-        <ellipse cx="58" cy="93" rx="22" ry="16" fill={Gx} />
-        {/* Eye character — blink via scaleY */}
-        <g style={{
-          transform: `translate(58px,93px) scaleY(${eyeH}) translate(-58px,-93px)`,
-          transition: 'transform 0.08s ease',
-        }}>
-          <text
-            x={58 + lOff.x} y={99 + lOff.y}
-            textAnchor="middle"
-            fontFamily="'Courier New', monospace"
-            fontSize="26"
-            fill={G}
-            filter={`url(#${uid}-glow2)`}
-            style={{ transition: 'x 0.2s, y 0.2s' }}
-          >
-            {eyeChar}
-          </text>
+        {/* Ring 2 — tilted orbit, back arc */}
+        <path
+          d="M 24 100 A 76 10 0 0 0 176 100"
+          fill="none"
+          stroke={accent}
+          strokeWidth="1"
+          strokeOpacity="0.2"
+          strokeDasharray="6 14"
+          transform="rotate(-48 100 100)"
+          className={styles.ring2}
+        />
+
+        {/* ===================== LAYER 2: FACE SHELL ===================== */}
+
+        {/* Main face polygon */}
+        <path
+          d={facePath}
+          fill={`url(#${uid}-face)`}
+          stroke={primary}
+          strokeWidth="1.6"
+          strokeOpacity="0.75"
+        />
+
+        {/* Edge highlight facets — brighter top edges for 3D depth */}
+        <path d="M 100 16 L 156 48" stroke={primary} strokeWidth="1.2" strokeOpacity="0.9" />
+        <path d="M 100 16 L 44 48"  stroke={primary} strokeWidth="1.2" strokeOpacity="0.9" />
+        <path d="M 156 48 L 174 100" stroke={primary} strokeWidth="0.7" strokeOpacity="0.4" />
+        <path d="M 44 48 L 26 100"  stroke={primary} strokeWidth="0.7" strokeOpacity="0.4" />
+        <path d="M 174 100 L 154 152" stroke={primary} strokeWidth="0.5" strokeOpacity="0.22" />
+        <path d="M 26 100 L 46 152"  stroke={primary} strokeWidth="0.5" strokeOpacity="0.22" />
+
+        {/* ===================== LAYER 3: INTERNAL 3D GRID ===================== */}
+
+        {/* Horizontal contour lines (perspective face surface) */}
+        <line x1="56"  y1="68"  x2="144" y2="68"  stroke={primary} strokeWidth="0.45" strokeOpacity="0.14" />
+        <line x1="40"  y1="100" x2="160" y2="100" stroke={primary} strokeWidth="0.45" strokeOpacity="0.1"  />
+        <line x1="50"  y1="134" x2="150" y2="134" stroke={primary} strokeWidth="0.4"  strokeOpacity="0.1"  />
+
+        {/* Vertical center spine */}
+        <line x1="100" y1="20"  x2="100" y2="166" stroke={primary} strokeWidth="0.45" strokeOpacity="0.1" />
+
+        {/* Diagonal facial topology lines */}
+        <path d="M 60 50 L 66 70 L 58 100" fill="none" stroke={primary} strokeWidth="0.4" strokeOpacity="0.14" />
+        <path d="M 140 50 L 134 70 L 142 100" fill="none" stroke={primary} strokeWidth="0.4" strokeOpacity="0.14" />
+
+        {/* ===================== LAYER 4: SCAN SWEEP (CSS animated) ===================== */}
+        <rect
+          x="28" y="0" width="144" height="3"
+          fill={primary}
+          opacity="0.5"
+          className={styles.scanSweep}
+          clipPath={`url(#${uid}-faceClip)`}
+        />
+
+        {/* ===================== LAYER 5: BROW SENSOR BARS ===================== */}
+
+        {/* Left brow — angular sensor line */}
+        <path
+          d="M 46 76 L 68 70 L 92 75"
+          fill="none"
+          stroke={primary}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeOpacity="0.8"
+          filter={`url(#${uid}-glow)`}
+        />
+        {/* Right brow */}
+        <path
+          d="M 154 76 L 132 70 L 108 75"
+          fill="none"
+          stroke={primary}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeOpacity="0.8"
+          filter={`url(#${uid}-glow)`}
+        />
+        {/* Brow apex dots */}
+        <circle cx="68"  cy="70" r="2.2" fill={primary} opacity="0.85" filter={`url(#${uid}-glow)`} />
+        <circle cx="132" cy="70" r="2.2" fill={primary} opacity="0.85" filter={`url(#${uid}-glow)`} />
+
+        {/* ===================== LAYER 6: EYES ===================== */}
+
+        {/* LEFT EYE */}
+        <g transform={`translate(72 94) scale(1 ${eyeScale}) translate(-72 -94)`}>
+          {/* Socket ambient glow */}
+          <ellipse cx="72" cy="94" rx="21" ry="11" fill={`url(#${uid}-eyeGlow)`} opacity="0.38" />
+          {/* Diamond eye shape */}
+          <path
+            d="M 52 94 L 72 82 L 92 94 L 72 106 Z"
+            fill={secondary}
+            stroke={primary}
+            strokeWidth="1.8"
+            filter={`url(#${uid}-glow)`}
+          />
+          {/* Iris ring */}
+          <circle cx="72" cy="94" r="9"   fill={primary}   opacity="0.22" />
+          <circle cx="72" cy="94" r="9"   fill="none"      stroke={primary} strokeWidth="1.2" opacity="0.7" />
+          {/* Inner scan ring (dashed) */}
+          <circle cx="72" cy="94" r="12"  fill="none"      stroke={primary} strokeWidth="0.6" strokeOpacity="0.35" strokeDasharray="2.5 3" />
+          {/* Pupil */}
+          <circle cx="72" cy="94" r="4"   fill={primary}   opacity="0.8"  />
+          <circle cx="72" cy="94" r="2.5" fill="#ffffff"   opacity="0.98" filter={`url(#${uid}-pulse)`} />
         </g>
-        {/* Scan line across eye */}
-        <line x1="22" y1="93" x2="94" y2="93" stroke={G} strokeWidth="0.6" strokeOpacity="0.2" />
 
-        {/* ── RIGHT EYE HOUSING ── */}
-        <rect x="106" y="70" width="72" height="46" rx="2"
-          fill="rgba(0,255,65,0.04)" stroke={G} strokeWidth="1.8" strokeOpacity="0.9" />
-        <line x1="106" y1="70" x2="116" y2="70" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="106" y1="70" x2="106" y2="80" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="168" y1="70" x2="178" y2="70" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="178" y1="70" x2="178" y2="80" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="106" y1="116" x2="116" y2="116" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="106" y1="106" x2="106" y2="116" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="168" y1="116" x2="178" y2="116" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="178" y1="106" x2="178" y2="116" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <ellipse cx="142" cy="93" rx="22" ry="16" fill={Gx} />
-        <g style={{
-          transform: `translate(142px,93px) scaleY(${eyeH}) translate(-142px,-93px)`,
-          transition: 'transform 0.08s ease',
-        }}>
-          <text
-            x={142 + rOff.x} y={99 + rOff.y}
-            textAnchor="middle"
-            fontFamily="'Courier New', monospace"
-            fontSize="26"
-            fill={G}
-            filter={`url(#${uid}-glow2)`}
-            style={{ transition: 'x 0.2s, y 0.2s' }}
-          >
-            {eyeChar}
-          </text>
+        {/* RIGHT EYE */}
+        <g transform={`translate(128 94) scale(1 ${eyeScale}) translate(-128 -94)`}>
+          <ellipse cx="128" cy="94" rx="21" ry="11" fill={`url(#${uid}-eyeGlow)`} opacity="0.38" />
+          <path
+            d="M 108 94 L 128 82 L 148 94 L 128 106 Z"
+            fill={secondary}
+            stroke={primary}
+            strokeWidth="1.8"
+            filter={`url(#${uid}-glow)`}
+          />
+          <circle cx="128" cy="94" r="9"   fill={primary}   opacity="0.22" />
+          <circle cx="128" cy="94" r="9"   fill="none"      stroke={primary} strokeWidth="1.2" opacity="0.7" />
+          <circle cx="128" cy="94" r="12"  fill="none"      stroke={primary} strokeWidth="0.6" strokeOpacity="0.35" strokeDasharray="2.5 3" />
+          <circle cx="128" cy="94" r="4"   fill={primary}   opacity="0.8"  />
+          <circle cx="128" cy="94" r="2.5" fill="#ffffff"   opacity="0.98" filter={`url(#${uid}-pulse)`} />
         </g>
-        <line x1="106" y1="93" x2="178" y2="93" stroke={G} strokeWidth="0.6" strokeOpacity="0.2" />
 
-        {/* ── NOSE BRIDGE ── */}
-        <line x1="94" y1="116" x2="100" y2="124" stroke={Gd} strokeWidth="1" />
-        <line x1="106" y1="116" x2="100" y2="124" stroke={Gd} strokeWidth="1" />
-        <circle cx="100" cy="126" r="1.5" fill={G} fillOpacity="0.5" />
+        {/* ===================== LAYER 7: NOSE + MOUTH ===================== */}
 
-        {/* ── MOUTH HOUSING ── */}
-        <rect x="36" y="132" width="128" height="36" rx="2"
-          fill="rgba(0,255,65,0.04)" stroke={G} strokeWidth="1.8" strokeOpacity="0.9" />
-        {/* Mouth corner ticks */}
-        <line x1="36" y1="132" x2="48" y2="132" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="36" y1="132" x2="36" y2="142" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="152" y1="132" x2="164" y2="132" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="164" y1="132" x2="164" y2="142" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="36" y1="168" x2="48" y2="168" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="36" y1="158" x2="36" y2="168" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="152" y1="168" x2="164" y2="168" stroke={G} strokeWidth="3" strokeLinecap="square" />
-        <line x1="164" y1="158" x2="164" y2="168" stroke={G} strokeWidth="3" strokeLinecap="square" />
+        {/* Nose bridge — angular geometric structure */}
+        <path
+          d="M 97 109 L 93 124 L 107 124 L 103 109"
+          fill="none"
+          stroke={primary}
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeOpacity="0.45"
+        />
+        <line x1="93" y1="124" x2="107" y2="124" stroke={accent} strokeWidth="1" strokeOpacity="0.3" />
 
-        {/* Expression curve / mouth */}
-        <path d={mouthD} fill="none" stroke={G} strokeWidth="2.8"
-          strokeLinecap="square" filter={`url(#${uid}-glow2)`} />
-        {/* Grille lines above/below expression */}
-        <line x1="46" y1="137" x2="154" y2="137" stroke={Gd} strokeWidth="0.9" />
-        <line x1="46" y1="163" x2="154" y2="163" stroke={Gd} strokeWidth="0.9" />
+        {/* Mouth */}
+        <MouthShape type={config.mouthType} frame={frame} primary={primary} accent={accent} />
 
-        {/* ── SCAR ── */}
-        <line x1="138" y1="134" x2="150" y2="145"
-          stroke="rgba(0,255,65,0.5)" strokeWidth="1.5" strokeLinecap="square"
-          strokeDasharray="2,1.5" />
+        {/* Chin detail line */}
+        <path d="M 88 160 L 100 166 L 112 160" fill="none" stroke={primary} strokeWidth="1" strokeOpacity="0.3" />
 
-        {/* ── BOTTOM SEPARATOR ── */}
-        <line x1="8" y1="174" x2="192" y2="174" stroke={G} strokeWidth="1" strokeOpacity="0.5" />
+        {/* ===================== LAYER 8: HUD OVERLAYS ===================== */}
 
-        {/* ── BOTTOM STATUS BAR ── */}
-        <rect x="8" y="174" width="184" height="18" rx="2"
-          fill="rgba(0,255,65,0.05)" />
-        <text x="14" y="187" fontFamily="'Courier New', monospace" fontSize="8.5"
-          fill={G} filter={`url(#${uid}-glow)`}>
-          {hudQuote}
-          <tspan fill={cursor ? G : 'transparent'}>█</tspan>
-        </text>
+        {/* Top label */}
+        <text x="100" y="11" textAnchor="middle" className={styles.svgLabel} fill={primary}>{label}</text>
 
-        {/* ── SCANLINES ── */}
-        <rect x="8" y="8" width="184" height="184" rx="4"
-          fill={`url(#${uid}-scan)`} />
+        {/* Bottom status */}
+        <text x="100" y="181" textAnchor="middle" className={styles.svgHud} fill={accent}>{hudLine}</text>
 
-        {/* ── VIGNETTE ── */}
-        <rect x="8" y="8" width="184" height="184" rx="4"
-          fill={`url(#${uid}-vign)`} />
+        {/* Side HUD brackets */}
+        <path d="M 18 76 L 12 76 L 12 124 L 18 124" fill="none" stroke={accent} strokeWidth="1.2" strokeOpacity="0.45" />
+        <path d="M 182 76 L 188 76 L 188 124 L 182 124" fill="none" stroke={accent} strokeWidth="1.2" strokeOpacity="0.45" />
 
-        {/* ── SWEEP LINE ── */}
-        <rect x="8" y="-4" width="184" height="2" rx="1" fill={G} fillOpacity="0.22">
-          <animateTransform attributeName="transform" type="translate"
-            from="0,0" to="0,208" dur={
-              mood === 'thinking' ? '1.2s' :
-              mood === 'warning'  ? '1.5s' :
-              mood === 'focused'  ? '2s'   :
-              mood === 'calm'     ? '6s'   : '4s'
-            } repeatCount="indefinite" />
-        </rect>
+        {/* Corner targeting reticles */}
+        <path d="M 6 8  L 6 20  M 6 8  L 18 8"  stroke={accent} strokeWidth="1.1" strokeOpacity="0.5" fill="none" />
+        <path d="M 194 8  L 194 20  M 194 8  L 182 8"  stroke={accent} strokeWidth="1.1" strokeOpacity="0.5" fill="none" />
+        <path d="M 6 192 L 6 180  M 6 192 L 18 192" stroke={accent} strokeWidth="1.1" strokeOpacity="0.5" fill="none" />
+        <path d="M 194 192 L 194 180 M 194 192 L 182 192" stroke={accent} strokeWidth="1.1" strokeOpacity="0.5" fill="none" />
 
+        {/* Side micro readouts */}
+        <text x="15"  y="98"  className={styles.svgMicro} fill={accent} opacity="0.5">SYS</text>
+        <text x="15"  y="106" className={styles.svgMicro} fill={accent} opacity="0.5">OK</text>
+        <text x="185" y="98"  className={styles.svgMicro} fill={accent} opacity="0.5" textAnchor="end">NET</text>
+        <text x="185" y="106" className={styles.svgMicro} fill={accent} opacity="0.5" textAnchor="end">ACT</text>
+
+        {/* Floating data nodes */}
+        <circle cx="22"  cy="54"  r="1.5" fill={primary} opacity="0.45" />
+        <circle cx="178" cy="54"  r="1.5" fill={primary} opacity="0.45" />
+        <circle cx="14"  cy="140" r="1.5" fill={accent}  opacity="0.38" />
+        <circle cx="186" cy="140" r="1.5" fill={accent}  opacity="0.38" />
+        <circle cx="100" cy="8"   r="1.8" fill={primary} opacity="0.55" />
+
+        {/* ===================== LAYER 9: ORBITAL RINGS — FRONT ARCS ===================== */}
+
+        {/* Ring 1 — front arc (in front of face, bottom portion, brighter) */}
+        <path
+          d="M 14 100 A 86 12 0 0 1 186 100"
+          fill="none"
+          stroke={primary}
+          strokeWidth="2"
+          strokeOpacity="0.7"
+          strokeDasharray="14 9"
+          className={styles.ring1}
+        />
+
+        {/* Ring 2 — tilted orbit, front arc */}
+        <path
+          d="M 24 100 A 76 10 0 0 1 176 100"
+          fill="none"
+          stroke={accent}
+          strokeWidth="1.2"
+          strokeOpacity="0.45"
+          strokeDasharray="6 14"
+          transform="rotate(-48 100 100)"
+          className={styles.ring2}
+        />
       </svg>
     </div>
   )

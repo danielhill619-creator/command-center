@@ -1,18 +1,17 @@
 .widget {
-  background: rgba(10, 28, 70, 0.95);
-  border: 1px solid rgba(0, 200, 255, 0.55);
-  border-radius: 4px;
-  padding: 20px;
+  background: transparent;
+  border: none;
+  padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: 'Orbitron', 'Share Tech Mono', monospace;
+  font-family: 'Michroma', 'Orbitron', 'Share Tech Mono', monospace;
 }
 
 .label {
   font-size: 9px;
   letter-spacing: 3px;
-  color: #00c8ff;
+  color: #78e6ff;
   margin-bottom: 4px;
 }
 
@@ -20,15 +19,15 @@
   font-size: 28px;
   font-weight: 700;
   letter-spacing: 2px;
-  color: #00c8ff;
-  text-shadow: 0 0 20px rgba(0, 200, 255, 0.9);
+  color: #bff7ff;
+  text-shadow: 0 0 26px rgba(0, 200, 255, 1);
   line-height: 1;
 }
 
 .date {
   font-size: 11px;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.96);
   font-family: 'Exo 2', system-ui, sans-serif;
 }
 
@@ -47,7 +46,7 @@
 .key {
   font-size: 9px;
   letter-spacing: 2px;
-  color: rgba(0, 200, 255, 0.8);
+  color: rgba(120, 230, 255, 0.96);
 }
 
 .val {

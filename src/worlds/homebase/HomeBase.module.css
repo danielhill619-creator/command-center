@@ -5,7 +5,7 @@
 
 .container {
   min-height: 100vh;
-  background-color: #000008;
+  background-color: #000000;
   font-family: 'Exo 2', 'Orbitron', system-ui, sans-serif;
   color: #ffffff;
   position: relative;
@@ -115,39 +115,17 @@
 .nebula {
   position: fixed;
   inset: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 15% 65%, rgba(0, 50,130,0.14) 0%, transparent 100%),
-    radial-gradient(ellipse 60% 40% at 85% 25%, rgba(0, 30, 90,0.10) 0%, transparent 100%),
-    radial-gradient(ellipse 50% 60% at 50% 85%, rgba(0, 60,150,0.08) 0%, transparent 100%),
-    radial-gradient(ellipse 40% 30% at 70% 50%, rgba(0, 20, 80,0.06) 0%, transparent 100%);
+  background: none;
   pointer-events: none;
   z-index: 0;
 }
-
-/* ── TACTICAL GRID — faint HUD overlay ──────────────────────────────────── */
-.grid {
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0,200,255,0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,200,255,0.028) 1px, transparent 1px);
-  background-size: 80px 80px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-
 
 /* ── VIGNETTE — edge darkening + blue ambient glow ──────────────────────── */
 .vignette {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at center, transparent 35%, rgba(0,0,12,0.80) 100%),
-    radial-gradient(ellipse 130% 18% at 50%   0%, rgba(0,200,255,0.07) 0%, transparent 100%),
-    radial-gradient(ellipse 130% 18% at 50% 100%, rgba(0, 80,200,0.10) 0%, transparent 100%),
-    radial-gradient(ellipse  18% 100% at   0% 50%, rgba(0,120,255,0.06) 0%, transparent 100%),
-    radial-gradient(ellipse  18% 100% at 100% 50%, rgba(0,120,255,0.06) 0%, transparent 100%);
+    radial-gradient(ellipse at center, transparent 46%, rgba(0,0,0,0.58) 100%);
   pointer-events: none;
   z-index: 100;
 }
@@ -190,11 +168,13 @@
   z-index: 10;
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid rgba(0,200,255,0.5);
-  background: rgba(4,14,38,0.97);
-  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(10px);
   flex-shrink: 0;
-  box-shadow: 0 2px 32px rgba(0,200,255,0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 0 18px rgba(0,200,255,0.04);
 }
 
 .headerMain {
@@ -311,16 +291,32 @@
   letter-spacing: 0.3px;
 }
 
+.settingsBtn,
 .signOutBtn {
   font-family: 'Orbitron', monospace;
   font-size: 8px;
   letter-spacing: 1.5px;
-  color: rgba(0,200,255,0.7);
   background: transparent;
-  border: 1px solid rgba(0,200,255,0.3);
   padding: 5px 12px;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.settingsBtn {
+  color: rgba(124,220,255,0.85);
+  border: 1px solid rgba(124,220,255,0.35);
+}
+
+.settingsBtn:hover {
+  color: #fff;
+  border-color: rgba(124,220,255,0.8);
+  background: rgba(124,220,255,0.1);
+  box-shadow: 0 0 12px rgba(124,220,255,0.18);
+}
+
+.signOutBtn {
+  color: rgba(0,200,255,0.7);
+  border: 1px solid rgba(0,200,255,0.3);
 }
 .signOutBtn:hover {
   color: #fff;
@@ -335,35 +331,25 @@
   align-items: center;
   gap: 12px;
   padding: 5px 28px;
-  border-top: 1px solid rgba(0,200,255,0.08);
-  background: rgba(0,5,20,0.6);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.01);
   font-family: 'Orbitron', monospace;
   font-size: 8px;
   letter-spacing: 1.5px;
-  color: rgba(0,200,255,0.4);
+  color: rgba(255,255,255,0.58);
   overflow-x: auto;
   scrollbar-width: none;
 }
 .telemetry::-webkit-scrollbar { display: none; }
 
 .telDivider {
-  color: rgba(0,200,255,0.18);
+  color: rgba(255,255,255,0.20);
 }
 
 .telClock {
-  color: rgba(0,200,255,0.65);
+  color: rgba(255,255,255,0.78);
   font-variant-numeric: tabular-nums;
   min-width: 80px;
-}
-
-/* ── STATS BAR ───────────────────────────────────────────────────────────── */
-.statsBar {
-  position: relative;
-  z-index: 5;
-  padding: 0 28px;
-  flex-shrink: 0;
-  border-bottom: 1px solid rgba(0,200,255,0.2);
-  background: rgba(2,10,28,0.85);
 }
 
 /* ── MAIN CONTENT ────────────────────────────────────────────────────────── */
@@ -406,18 +392,24 @@
 /* ── TOP ROW ─────────────────────────────────────────────────────────────── */
 .topRow {
   display: grid;
-  grid-template-columns: 220px 200px 1fr;
-  gap: 16px;
-  align-items: stretch;
-}
-
-/* ── MIDDLE ROW ──────────────────────────────────────────────────────────── */
-.midRow {
-  display: grid;
   grid-template-columns: 1fr 420px;
   gap: 16px;
   align-items: stretch;
-  min-height: 320px;
+  height: 700px;
+}
+
+/* ── INFO ROW ────────────────────────────────────────────────────────────── */
+.infoRow {
+  display: grid;
+  grid-template-columns: 200px 180px 1fr;
+  gap: 16px;
+  align-items: stretch;
+  min-height: 220px;
+}
+
+/* ── MIDDLE ROW — portals only, full width ───────────────────────────────── */
+.midRow {
+  display: flex;
 }
 
 .colNarrow,
@@ -427,18 +419,22 @@
   flex-direction: column;
 }
 
-/* colGemini must cap height so overflow-y: auto activates inside the widget */
-.colGemini {
+/* Email column — fills everything left of Q.U.B.E. */
+.colMail {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   min-height: 0;
+  overflow: hidden;
 }
 
-/* ── Q.U.B.E. ROW ────────────────────────────────────────────────────────── */
-.qubeRow {
-  height: 380px;
+
+
+/* Q.U.B.E. column — right of news in topRow */
+.colQube {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* ── PORTAL SECTION ──────────────────────────────────────────────────────── */
@@ -578,28 +574,25 @@
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .topRow {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
-  .topRow > :last-child {
-    grid-column: span 2;
+  .infoRow {
+    grid-template-columns: 1fr 1fr;
   }
   .midRow {
     grid-template-columns: 1fr;
   }
-  .portalGrid {
-    grid-template-columns: repeat(5, 1fr);
+  .infoRow > :last-child {
+    grid-column: span 2;
   }
 }
 
 @media (max-width: 700px) {
-  .portalGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .topRow {
+  .infoRow {
     grid-template-columns: 1fr;
   }
-  .topRow > :last-child {
-    grid-column: span 1;
+  .portalGrid {
+    grid-template-columns: repeat(3, 1fr);
   }
   .headerCenter {
     display: none;

@@ -20,6 +20,11 @@ function getSheetId(sheetIds) {
   return sheetIds?.['Command Center — AI Memory']
 }
 
+function compact(value = '', limit = 240) {
+  const oneLine = `${value}`.replace(/\s+/g, ' ').trim()
+  return oneLine.length > limit ? `${oneLine.slice(0, limit)}...` : oneLine
+}
+
 // ─── Context tab ─────────────────────────────────────────────────────────────
 
 /**
@@ -32,6 +37,18 @@ export async function readContext(sheetIds) {
     const rows = await readRange(id, 'Context!A1:B100')
     if (!rows?.length) return ''
     return rows.map(r => `${r[0] ?? ''}: ${r[1] ?? ''}`).join('\n')
+  } catch {
+    return ''
+  }
+}
+
+export async function readContextValue(sheetIds, key) {
+  const id = getSheetId(sheetIds)
+  if (!id) return ''
+  try {
+    const rows = await readRange(id, 'Context!A1:C100')
+    const row = (rows ?? []).find(entry => entry[0] === key)
+    return row?.[1] ?? ''
   } catch {
     return ''
   }
@@ -91,6 +108,38 @@ export async function readRecentConversation(sheetIds, limit = 20) {
       .filter(t => t.text)
   } catch {
     return []
+  }
+}
+
+export async function readRecentConversationText(sheetIds, limit = 8) {
+  const id = getSheetId(sheetIds)
+  if (!id) return ''
+  try {
+    const rows = await readRange(id, 'Conversation History!A1:D500')
+    if (!rows?.length) return ''
+    return rows
+      .slice(-limit)
+      .map(row => `[${row[1] || 'homebase'}] ${row[2] || 'user'}: ${compact(row[3] || '', 180)}`)
+      .filter(Boolean)
+      .join('\n')
+  } catch {
+    return ''
+  }
+}
+
+export async function readRecentActionLog(sheetIds, limit = 8) {
+  const id = getSheetId(sheetIds)
+  if (!id) return ''
+  try {
+    const rows = await readRange(id, 'Action Log!A1:E200')
+    if (!rows?.length) return ''
+    return rows
+      .slice(-limit)
+      .map(row => `[${row[1] || 'homebase'}] ${row[2] || 'action'} - ${compact(row[3] || '', 140)} (${row[4] || 'ok'})`)
+      .filter(Boolean)
+      .join('\n')
+  } catch {
+    return ''
   }
 }
 
@@ -169,16 +218,22 @@ export async function readPreferences(sheetIds) {
  * Build a complete context string for Gemini — combines all memory tabs.
  * Called before every Gemini prompt.
  */
-export async function buildFullContext(sheetIds) {
-  const [context, worldSummaries, prefs] = await Promise.all([
+export async function buildFullContext(sheetIds, options = {}) {
+  const { includeRecentConversation = false, includeActionLog = false, recentLimit = 8 } = options
+
+  const [context, worldSummaries, prefs, recentConversation, recentActions] = await Promise.all([
     readContext(sheetIds),
     readWorldSummaries(sheetIds),
     readPreferences(sheetIds),
+    includeRecentConversation ? readRecentConversationText(sheetIds, recentLimit) : '',
+    includeActionLog ? readRecentActionLog(sheetIds, recentLimit) : '',
   ])
 
   const parts = []
-  if (context)       parts.push(`=== CONTEXT ===\n${context}`)
+  if (context) parts.push(`=== DURABLE CONTEXT ===\n${context}`)
+  if (prefs) parts.push(`=== USER PREFERENCES ===\n${prefs}`)
   if (worldSummaries) parts.push(`=== WORLD SUMMARIES ===\n${worldSummaries}`)
-  if (prefs)         parts.push(`=== PREFERENCES ===\n${prefs}`)
+  if (recentActions) parts.push(`=== RECENT ACTIONS ===\n${recentActions}`)
+  if (recentConversation) parts.push(`=== RECENT CONVERSATION SNAPSHOT ===\n${recentConversation}`)
   return parts.join('\n\n')
 }

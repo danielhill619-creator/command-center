@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import FloatingChat from '../../widgets/floating-chat/FloatingChat'
 import useWorkData from './useWorkData'
+import { useArrowNav } from '../../shared/hooks/useArrowNav'
 import styles from './WorkWorld.module.css'
 
 // ── Kanban column config ────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ export default function WorkWorld() {
   } = useWorkData()
 
   const [activeSection, setActiveSection] = useState('tasks')
+  useArrowNav(SECTIONS, activeSection, setActiveSection)
 
   // Modal states
   const [showAddTask,    setShowAddTask]    = useState(false)
@@ -139,6 +141,7 @@ export default function WorkWorld() {
           <span className={styles.worldName}>WORK</span>
         </div>
         <div className={styles.headerRight}>
+          <button className={styles.settingsBtn} onClick={() => navigate('/settings')} title="Settings">⚙</button>
           <button className={styles.reloadBtn} onClick={reload} title="Reload data">↻</button>
         </div>
       </header>
@@ -408,6 +411,7 @@ export default function WorkWorld() {
             </table>
           </div>
         )}
+
       </main>
 
       {/* ── MODALS ── */}

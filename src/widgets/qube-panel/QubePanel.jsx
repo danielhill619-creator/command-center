@@ -1,29 +1,45 @@
 import { useState, useRef, useEffect } from 'react'
 import { useGemini } from '../../shared/hooks/useGemini'
-import AriaFace, { getAriaMood } from '../aria-face/AriaFace'
+import useHeadlines from '../../shared/hooks/useHeadlines'
 import styles from './QubePanel.module.css'
 
-export default function QubePanel({ world = 'homebase' }) {
-  const { chat, chatHistory, chatLoading } = useGemini(world)
-  const [input,  setInput]  = useState('')
-  const bottomRef            = useRef(null)
-  const inputRef             = useRef(null)
+function renderLines(text) {
+  return text.split('\n').filter(l => l.trim()).map((line, j) => {
+    const isBullet = /^[•\-*]/.test(line) || /^\d+\./.test(line)
+    const clean    = line.replace(/^[•\-*]\s*/, '').replace(/^\d+\.\s*/, '').replace(/\*\*/g, '')
+    const isBold   = line.startsWith('**') || line.startsWith('##')
+    const text2    = clean.replace(/^#+\s*/, '')
+    if (isBold)   return <p key={j} className={styles.boldLine}>{text2}</p>
+    if (isBullet) return <p key={j} className={styles.bullet}><span>▸</span>{clean}</p>
+    return <p key={j}>{line.replace(/\*\*/g, '')}</p>
+  })
+}
 
-  const latestText = chatHistory.length
-    ? chatHistory[chatHistory.length - 1].text
-    : ''
-  const mood = getAriaMood(latestText, chatLoading, world)
+export default function GeminiPanel({ world = 'homebase' }) {
+  const {
+    briefing, briefingLoading, triggerBriefing, ready,
+    chat, chatHistory, chatLoading,
+  } = useGemini(world)
 
-  // Auto-scroll to latest message
+  const { headlines } = useHeadlines()
+  const [input, setInput] = useState('')
+  const bottomRef = useRef(null)
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [chatHistory])
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [chatHistory, chatLoading])
+
+  function buildNewsContext() {
+    if (!headlines.length) return ''
+    const items = headlines.slice(0, 15).map((h, i) => `${i + 1}. ${h.title}`).join('\n')
+    return `=== LIVE NEWS HEADLINES (${new Date().toLocaleTimeString()}) ===\n${items}`
+  }
 
   async function handleSend() {
     const msg = input.trim()
     if (!msg || chatLoading) return
     setInput('')
-    await chat(msg)
+    await chat(msg, { extra: buildNewsContext() })
   }
 
   function handleKey(e) {
@@ -36,76 +52,82 @@ export default function QubePanel({ world = 'homebase' }) {
   return (
     <div className={styles.panel}>
 
-      {/* ── Face + identity header ── */}
-      <div className={styles.faceRow}>
-        <AriaFace mood={mood} size="xl" label="Q.U.B.E." />
-        <div className={styles.identity}>
-          <span className={styles.name}>Q.U.B.E.</span>
-          <span className={styles.fullName}>QUANTUM UTILITY & BANTER ENGINE</span>
-          <span className={styles.moodTag}>{chatLoading ? 'THINKING...' : mood.toUpperCase()}</span>
-        </div>
-      </div>
-
-      {/* ── Chat messages ── */}
+      {/* ── Messages ── */}
       <div className={styles.messages}>
-        {chatHistory.length === 0 && (
-          <div className={styles.empty}>
-            Q.U.B.E. is online. Ask anything about your worlds.
+
+        {/* Daily briefing */}
+        <div className={styles.briefingBlock}>
+          <div className={styles.briefingHeader}>
+            <span className={styles.briefingLabel}>DAILY BRIEFING</span>
+            <button
+              className={styles.refreshBtn}
+              onClick={triggerBriefing}
+              disabled={briefingLoading || !ready}
+              title="Refresh briefing"
+            >↻</button>
           </div>
-        )}
+
+          {briefingLoading && (
+            <div className={styles.briefingLoading}>
+              <span className={styles.dot} /><span className={styles.dot} /><span className={styles.dot} />
+            </div>
+          )}
+
+          {!briefingLoading && !briefing && !ready && (
+            <p className={styles.briefingEmpty}>Connecting...</p>
+          )}
+
+          {!briefingLoading && !briefing && ready && (
+            <p className={styles.briefingEmpty}>
+              No briefing yet.{' '}
+              <button className={styles.triggerLink} onClick={triggerBriefing}>Generate now</button>
+            </p>
+          )}
+
+          {briefing && (
+            <div className={styles.briefingContent}>
+              {renderLines(briefing)}
+            </div>
+          )}
+        </div>
+
+        {/* Chat history */}
         {chatHistory.map((msg, i) => (
           <div
             key={i}
             className={msg.role === 'user' ? styles.userMsg : styles.aiMsg}
           >
-            {msg.role !== 'user' && (
-              <span className={styles.aiTag}>Q.U.B.E.</span>
-            )}
-            <div className={styles.msgText}>
-              {msg.text.split('\n').map((line, j) => {
-                if (!line.trim()) return null
-                const isBullet = /^[•\-*]/.test(line) || /^\d+\./.test(line)
-                const text = line
-                  .replace(/^[•\-*]\s*/, '')
-                  .replace(/^\d+\.\s*/, '')
-                  .replace(/\*\*/g, '')
-                return isBullet
-                  ? <p key={j} className={styles.bullet}><span>▸</span>{text}</p>
-                  : <p key={j}>{line.replace(/\*\*/g, '')}</p>
-              })}
-            </div>
+            <div className={styles.msgText}>{renderLines(msg.text)}</div>
           </div>
         ))}
+
         {chatLoading && (
           <div className={styles.aiMsg}>
-            <span className={styles.aiTag}>Q.U.B.E.</span>
             <div className={styles.typing}>
               <span /><span /><span />
             </div>
           </div>
         )}
+
         <div ref={bottomRef} />
       </div>
 
       {/* ── Input ── */}
       <div className={styles.inputRow}>
         <textarea
-          ref={inputRef}
           className={styles.input}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKey}
-          placeholder="Message Q.U.B.E...."
+          placeholder="Ask anything..."
           rows={1}
-          disabled={chatLoading}
+          disabled={chatLoading || briefingLoading}
         />
         <button
           className={styles.sendBtn}
           onClick={handleSend}
           disabled={!input.trim() || chatLoading}
-        >
-          ▶
-        </button>
+        >▶</button>
       </div>
     </div>
   )

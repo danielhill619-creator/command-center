@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from './shared/components/ProtectedRoute'
 import Login from './pages/Login'
+import MailWorkspace from './pages/MailWorkspace'
+import Settings from './pages/Settings'
 import HomeBase from './worlds/homebase/HomeBase'
 import WorkWorld from './worlds/work/WorkWorld'
 import SchoolWorld from './worlds/school/SchoolWorld'
@@ -33,6 +35,12 @@ export default function App() {
         } />
         <Route path="/spiritual" element={
           <ProtectedRoute><SpiritualWorld /></ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute><Settings /></ProtectedRoute>
+        } />
+        <Route path="/mail" element={
+          <ProtectedRoute><MailWorkspace /></ProtectedRoute>
         } />
 
         {/* Catch-all → login */}
