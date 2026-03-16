@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import SystemMonitor from '../../widgets/sysmonitor/SystemMonitor'
 import Weather from '../../widgets/weather/Weather'
 import NewsReel from '../../widgets/newsreel/NewsReel'
@@ -14,20 +13,11 @@ function snap(value) {
   return Math.round(value / GRID) * GRID
 }
 
-const PORTALS = [
-  { id: 'work',      label: 'Work',      path: '/work',      icon: '◈', color: '#00c8ff' },
-  { id: 'school',    label: 'School',    path: '/school',    icon: '◉', color: '#ff2d8a' },
-  { id: 'home',      label: 'Home',      path: '/home',      icon: '⬡', color: '#4caf50' },
-  { id: 'fun',       label: 'Fun',       path: '/fun',       icon: '★', color: '#ffd600' },
-  { id: 'spiritual', label: 'Spiritual', path: '/spiritual', icon: '✦', color: '#c9a84c' },
-]
-
 const DEFAULT_LAYOUT = {
   mail:    { x: 0,   y: 0,   w: 960, h: 480, minW: 576, minH: 420, title: 'MAIL CENTER' },
   news:    { x: 0,   y: 504, w: 432, h: 240, minW: 384, minH: 240, title: 'NEWS FEED' },
   weather: { x: 456, y: 504, w: 264, h: 240, minW: 240, minH: 216, title: 'WEATHER' },
   system:  { x: 744, y: 504, w: 216, h: 240, minW: 216, minH: 216, title: 'SYSTEM' },
-  worlds:  { x: 984, y: 504, w: 168, h: 240, minW: 192, minH: 216, title: 'WORLDS' },
 }
 
 function loadLayout() {
@@ -50,32 +40,14 @@ function saveLayout(layout) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped))
 }
 
-function WorldsCard() {
-  const navigate = useNavigate()
-  return (
-    <div className={styles.worldsWrap}>
-      {PORTALS.map(portal => (
-        <button
-          key={portal.id}
-          className={styles.portalBtn}
-          style={{ '--portal-color': portal.color }}
-          onClick={() => navigate(portal.path)}
-        >
-          <span className={styles.portalIcon}>{portal.icon}</span>
-          <span className={styles.portalLabel}>{portal.label}</span>
-        </button>
-      ))}
-    </div>
-  )
-}
-
 const CARD_COMPONENTS = {
   mail:    <EmailCenter />,
   news:    <NewsReel />,
   weather: <Weather />,
   system:  <SystemMonitor />,
-  worlds:  <WorldsCard />,
 }
+
+const MOBILE_CARD_ORDER = ['news', 'mail', 'weather', 'system']
 
 export default function HomeDashboard() {
   const [layout, setLayout] = useState(loadLayout)
@@ -153,9 +125,13 @@ export default function HomeDashboard() {
   )
 
   if (isMobile) {
+    const orderedLayout = MOBILE_CARD_ORDER
+      .map(id => [id, layout[id]])
+      .filter(([, item]) => Boolean(item))
+
     return (
       <div className={styles.mobileStack}>
-        {Object.entries(layout).map(([id, item]) => (
+        {orderedLayout.map(([id, item]) => (
           <section key={id} className={styles.card}>
             <div className={styles.cardHeader}>
               <span className={styles.cardTitle}>{item.title}</span>

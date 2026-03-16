@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import FloatingChat from '../../widgets/floating-chat/FloatingChat'
 import useWorkData from './useWorkData'
 import { useArrowNav } from '../../shared/hooks/useArrowNav'
@@ -36,7 +35,6 @@ const SECTION_LABELS = {
 }
 
 export default function WorkWorld() {
-  const navigate = useNavigate()
   const {
     projects, tasks, clients, invoices, income,
     loading, error, reload,
@@ -129,25 +127,9 @@ export default function WorkWorld() {
 
   return (
     <div className={styles.container}>
-
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <button className={styles.backBtn} onClick={() => navigate('/homebase')}>
-            ← HOME BASE
-          </button>
-        </div>
-        <div className={styles.headerCenter}>
-          <span className={styles.worldName}>WORK</span>
-        </div>
-        <div className={styles.headerRight}>
-          <button className={styles.settingsBtn} onClick={() => navigate('/settings')} title="Settings">⚙</button>
-          <button className={styles.reloadBtn} onClick={reload} title="Reload data">↻</button>
-        </div>
-      </header>
-
       {/* Stats bar */}
       <div className={styles.statsBar}>
+        <div className={styles.worldBadge}>WORK</div>
         <div className={styles.stat}>
           <span className={styles.statValue}>{openTasks.length}</span>
           <span className={styles.statLabel}>OPEN TASKS</span>
@@ -178,6 +160,7 @@ export default function WorkWorld() {
             </div>
           </>
         )}
+        <button className={styles.reloadBtn} onClick={reload} title="Reload data">RELOAD</button>
       </div>
 
       {/* Section nav */}

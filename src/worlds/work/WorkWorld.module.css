@@ -11,76 +11,20 @@
   flex-direction: column;
 }
 
-/* ── Header ──────────────────────────────────────────────────────────────── */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.headerLeft,
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 120px;
-}
-
-.headerRight {
-  justify-content: flex-end;
-}
-
-.headerCenter {
-  flex: 1;
-  text-align: center;
-}
-
-.backBtn {
-  font-family: inherit;
-  font-size: 11px;
-  letter-spacing: 1.5px;
-  color: rgba(0, 150, 255, 0.5);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s;
-}
-.backBtn:hover { color: #0096ff; }
-
-.worldName {
-  font-size: 11px;
-  letter-spacing: 4px;
-  color: rgba(255, 255, 255, 0.18);
-  font-weight: 600;
-}
-
 .reloadBtn {
-  font-size: 16px;
-  color: rgba(255,255,255,0.25);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: color 0.2s;
-  line-height: 1;
-}
-.reloadBtn:hover { color: #0096ff; }
-
-.settingsBtn {
-  font-size: 15px;
-  color: rgba(255,255,255,0.4);
-  background: transparent;
+  margin-left: auto;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
+  padding: 8px 12px;
   cursor: pointer;
   transition: color 0.2s, border-color 0.2s, background 0.2s;
+  line-height: 1;
 }
-
-.settingsBtn:hover {
+.reloadBtn:hover {
   color: #0096ff;
   border-color: rgba(0,150,255,0.35);
   background: rgba(0,150,255,0.08);
@@ -90,10 +34,19 @@
 .statsBar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0;
   padding: 12px 28px;
   background: rgba(255,255,255,0.02);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.worldBadge {
+  padding: 0 24px 0 0;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.22);
+  font-weight: 600;
 }
 
 .stat {

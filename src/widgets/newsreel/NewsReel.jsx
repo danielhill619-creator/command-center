@@ -35,8 +35,9 @@ export default function NewsReel() {
 
       {loading && <div className={styles.status}>ACQUIRING SIGNAL...</div>}
       {error   && <div className={styles.status}>FEED UNAVAILABLE</div>}
+      {!loading && !error && headlines.length === 0 && <div className={styles.status}>NO STORIES FOUND</div>}
 
-      {!loading && !error && (
+      {!loading && !error && headlines.length > 0 && (
         <>
           <div
             className={`${styles.scroll} ${expanded ? styles.scrollExpanded : ''}`}
@@ -57,6 +58,7 @@ export default function NewsReel() {
                 <div className={styles.itemBody}>
                   <span className={styles.ticker}>{String(i + 1).padStart(2, '0')}</span>
                   <span className={styles.title}>{h.title}</span>
+                  <span className={styles.meta}>{h.source || 'Google News'}</span>
                 </div>
               </a>
             ))}

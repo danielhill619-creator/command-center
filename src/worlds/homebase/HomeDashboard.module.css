@@ -9,6 +9,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .dashboardLabel {
@@ -150,41 +151,46 @@
   min-height: 220px;
 }
 
-.worldsWrap {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  height: 100%;
+@media (max-width: 979px) {
+  .mobileStack .card {
+    border-width: 2px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(5, 16, 28, 0.96), rgba(1, 8, 16, 0.92));
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
+  }
+
+  .mobileStack .cardHeader {
+    padding: 14px 16px;
+    cursor: default;
+    touch-action: auto;
+  }
+
+  .mobileStack .cardBody {
+    padding: 14px 12px 16px;
+  }
 }
 
-.portalBtn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: rgba(255,255,255,0.003);
-  border: 1px solid color-mix(in srgb, var(--portal-color) 60%, rgba(255,255,255,0.12));
-  color: #fff;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-}
+@media (max-width: 700px) {
+  .dashboardToolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-.portalBtn:hover {
-  transform: translateY(-2px);
-  background: rgba(255,255,255,0.008);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--portal-color) 24%, transparent);
-}
+  .dashboardLabel {
+    font-size: 10px;
+    letter-spacing: 2.2px;
+  }
 
-.portalIcon {
-  font-size: 26px;
-  color: var(--portal-color);
-  filter: drop-shadow(0 0 10px var(--portal-color));
-}
+  .mobileStack {
+    gap: 14px;
+  }
 
-.portalLabel {
-  font-family: 'Michroma', 'Orbitron', monospace;
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
+  .mobileStack .card {
+    min-height: 0;
+  }
+
+  .mobileStack .cardTitle {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
 }

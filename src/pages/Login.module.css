@@ -42,7 +42,8 @@
   border: 1px solid rgba(0, 200, 255, 0.3);
   border-radius: 4px;
   padding: 48px 56px;
-  min-width: 380px;
+  width: min(100%, 420px);
+  max-width: 420px;
   text-align: center;
   box-shadow:
     0 0 40px rgba(0, 200, 255, 0.08),
@@ -139,4 +140,26 @@
   letter-spacing: 1.5px;
   color: rgba(255, 255, 255, 0.2);
   text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .container {
+    min-height: 100dvh;
+    padding: 20px 14px;
+  }
+
+  .panel {
+    padding: 32px 22px;
+  }
+
+  .title {
+    font-size: 18px;
+    letter-spacing: 2.4px;
+  }
+
+  .subtitle,
+  .prompt,
+  .note {
+    letter-spacing: 1.2px;
+  }
 }

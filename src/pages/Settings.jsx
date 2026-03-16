@@ -9,6 +9,11 @@ import {
   listAvailableGeminiModels,
   setSelectedGeminiModel,
 } from '../integrations/gemini-api/geminiService'
+import {
+  loadNewsPreferences,
+  resetNewsPreferences,
+  saveNewsPreferences,
+} from '../shared/newsPreferences'
 import styles from './Settings.module.css'
 
 const HOME_LAYOUT_KEY = 'cc_home_dashboard_layout_v1'
@@ -34,9 +39,18 @@ function inferAvailability(stats) {
   return 'Unknown'
 }
 
+function formatFollowList(items) {
+  return items.join('\n')
+}
+
+function parseFollowList(value) {
+  return [...new Set(value.split(/[\n,]/).map(item => item.trim()).filter(Boolean))]
+}
+
 export default function Settings() {
   const navigate = useNavigate()
   const { user, sheetsReady, sheetIds } = useAuth()
+  const [newsPreferences, setNewsPreferences] = useState(() => loadNewsPreferences())
   const [repoUrl, setRepoUrl] = useState(() => localStorage.getItem(REPO_URL_KEY) || '')
   const [selectedModel, setSelectedModelState] = useState(() => getSelectedGeminiModel())
   const [models, setModels] = useState([])
@@ -45,6 +59,9 @@ export default function Settings() {
   const [usageStats, setUsageStats] = useState(() => getGeminiUsageStats())
   const [emailState, setEmailState] = useState({ accounts: [], folders: {} })
   const [emailError, setEmailError] = useState('')
+  const [newsTopicsText, setNewsTopicsText] = useState(() => formatFollowList(loadNewsPreferences().topics))
+  const [newsOrganizationsText, setNewsOrganizationsText] = useState(() => formatFollowList(loadNewsPreferences().organizations))
+  const [newsSavedNotice, setNewsSavedNotice] = useState('')
 
   const manifest = useMemo(() => getAppManifest(), [])
 
@@ -90,6 +107,25 @@ export default function Settings() {
   function clearSheetCache() {
     localStorage.removeItem(SHEET_IDS_KEY)
     window.alert('Cached sheet ids cleared. The app will re-initialize sheets on the next sign-in or refresh.')
+  }
+
+  function saveNewsFeedPreferences() {
+    const next = saveNewsPreferences({
+      topics: parseFollowList(newsTopicsText),
+      organizations: parseFollowList(newsOrganizationsText),
+    })
+    setNewsPreferences(next)
+    setNewsTopicsText(formatFollowList(next.topics))
+    setNewsOrganizationsText(formatFollowList(next.organizations))
+    setNewsSavedNotice(`Saved ${next.topics.length} topics and ${next.organizations.length} organizations.`)
+  }
+
+  function restoreDefaultNewsFeedPreferences() {
+    const next = resetNewsPreferences()
+    setNewsPreferences(next)
+    setNewsTopicsText(formatFollowList(next.topics))
+    setNewsOrganizationsText(formatFollowList(next.organizations))
+    setNewsSavedNotice('Restored the default Command Center follow list.')
   }
 
   return (
@@ -185,6 +221,43 @@ export default function Settings() {
           <div className={styles.tagWrap}>{manifest.worlds.map(item => <span key={item} className={styles.tag}>{item}</span>)}</div>
           <div className={styles.rowLabel}>Widgets</div>
           <div className={styles.tagWrap}>{manifest.widgets.map(item => <span key={item} className={styles.tag}>{item}</span>)}</div>
+        </section>
+
+        <section className={`${styles.card} ${styles.cardWide}`}>
+          <div className={styles.cardTitle}>News Feed Following</div>
+          <p className={styles.helpText}>Edit the topics and organizations that shape your Google News-based feed. Use one item per line or commas.</p>
+
+          <div className={styles.rowLabel}>Topics</div>
+          <textarea
+            className={styles.textarea}
+            value={newsTopicsText}
+            onChange={e => {
+              setNewsTopicsText(e.target.value)
+              setNewsSavedNotice('')
+            }}
+            placeholder="AI&#10;U.S. Top Stories&#10;Atlanta Falcons"
+            rows={10}
+          />
+
+          <div className={styles.rowLabel}>Organizations</div>
+          <textarea
+            className={styles.textarea}
+            value={newsOrganizationsText}
+            onChange={e => {
+              setNewsOrganizationsText(e.target.value)
+              setNewsSavedNotice('')
+            }}
+            placeholder="Reuters&#10;AP&#10;YouVersion Bible"
+            rows={6}
+          />
+
+          <div className={styles.inlineActions}>
+            <button className={styles.actionBtn} onClick={saveNewsFeedPreferences}>Save news feed</button>
+            <button className={styles.secondaryBtn} onClick={restoreDefaultNewsFeedPreferences}>Restore defaults</button>
+          </div>
+
+          <div className={styles.helpText}>Active now: {newsPreferences.topics.length} topics, {newsPreferences.organizations.length} organizations.</div>
+          {newsSavedNotice && <div className={styles.muted}>{newsSavedNotice}</div>}
         </section>
 
         <section className={styles.card}>

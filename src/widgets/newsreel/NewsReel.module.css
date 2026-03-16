@@ -121,8 +121,39 @@
   overflow-wrap: anywhere;
 }
 
+.meta {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  color: rgba(167, 241, 255, 0.68);
+  text-transform: uppercase;
+}
+
 .item:hover .title {
   color: #ffffff;
+}
+
+@media (max-width: 700px) {
+  .item {
+    align-items: flex-start;
+    padding: 10px 2px;
+  }
+
+  .thumb,
+  .thumbPlaceholder {
+    width: 68px;
+    height: 52px;
+  }
+
+  .title {
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .expandBtn {
+    font-size: 9px;
+    padding-top: 12px;
+  }
 }
 
 .status {

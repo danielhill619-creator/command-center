@@ -163,193 +163,13 @@
 }
 
 /* ── HEADER ──────────────────────────────────────────────────────────────── */
-.header {
-  position: relative;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.02);
-  backdrop-filter: blur(10px);
-  flex-shrink: 0;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    0 0 18px rgba(0,200,255,0.04);
-}
-
-.headerMain {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 28px;
-}
-
-.headerLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 220px;
-}
-
-.logoIcon {
-  font-size: 22px;
-  color: #00c8ff;
-  filter: drop-shadow(0 0 10px #00c8ff) drop-shadow(0 0 20px rgba(0,200,255,0.5));
-  animation: pulse 3s ease-in-out infinite;
-}
-
-.logoBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
 .logoText {
   font-family: 'Orbitron', monospace;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 4px;
+  letter-spacing: 3px;
   color: #ffffff;
   text-shadow: 0 0 20px rgba(0,200,255,0.4);
-}
-
-.logoSub {
-  font-family: 'Orbitron', monospace;
-  font-size: 7px;
-  letter-spacing: 2.5px;
-  color: rgba(0,200,255,0.5);
-}
-
-/* Header center — status display */
-.headerCenter {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex: 1;
-  justify-content: center;
-}
-
-.hDivider {
-  flex: 1;
-  max-width: 80px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0,200,255,0.35), transparent);
-}
-
-.statusGroup {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pulseDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #00ff88;
-  box-shadow: 0 0 10px rgba(0,255,136,0.9), 0 0 20px rgba(0,255,136,0.4);
-  animation: pulse 2s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-.statusLabel {
-  font-family: 'Orbitron', monospace;
-  font-size: 9px;
-  letter-spacing: 2.5px;
-  color: rgba(0,255,136,0.75);
-  text-shadow: 0 0 10px rgba(0,255,136,0.4);
-}
-
-/* Header right */
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 220px;
-  justify-content: flex-end;
-}
-
-.sheetStatus {
-  font-family: 'Orbitron', monospace;
-  font-size: 8px;
-  letter-spacing: 2px;
-  color: #00ff88;
-  text-shadow: 0 0 8px rgba(0,255,136,0.8);
-}
-
-.sheetStatusOff {
-  font-family: 'Orbitron', monospace;
-  font-size: 8px;
-  letter-spacing: 2px;
-  color: #ffcc00;
-  animation: blink 1s step-end infinite;
-}
-
-.userEmail {
-  font-size: 11px;
-  color: rgba(0,200,255,0.7);
-  letter-spacing: 0.3px;
-}
-
-.settingsBtn,
-.signOutBtn {
-  font-family: 'Orbitron', monospace;
-  font-size: 8px;
-  letter-spacing: 1.5px;
-  background: transparent;
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.settingsBtn {
-  color: rgba(124,220,255,0.85);
-  border: 1px solid rgba(124,220,255,0.35);
-}
-
-.settingsBtn:hover {
-  color: #fff;
-  border-color: rgba(124,220,255,0.8);
-  background: rgba(124,220,255,0.1);
-  box-shadow: 0 0 12px rgba(124,220,255,0.18);
-}
-
-.signOutBtn {
-  color: rgba(0,200,255,0.7);
-  border: 1px solid rgba(0,200,255,0.3);
-}
-.signOutBtn:hover {
-  color: #fff;
-  border-color: rgba(0,200,255,0.8);
-  background: rgba(0,200,255,0.1);
-  box-shadow: 0 0 12px rgba(0,200,255,0.2);
-}
-
-/* ── TELEMETRY STRIP ─────────────────────────────────────────────────────── */
-.telemetry {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 5px 28px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  background: rgba(255,255,255,0.01);
-  font-family: 'Orbitron', monospace;
-  font-size: 8px;
-  letter-spacing: 1.5px;
-  color: rgba(255,255,255,0.58);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.telemetry::-webkit-scrollbar { display: none; }
-
-.telDivider {
-  color: rgba(255,255,255,0.20);
-}
-
-.telClock {
-  color: rgba(255,255,255,0.78);
-  font-variant-numeric: tabular-nums;
-  min-width: 80px;
 }
 
 /* ── MAIN CONTENT ────────────────────────────────────────────────────────── */
@@ -357,9 +177,28 @@
   position: relative;
   z-index: 1;
   flex: 1;
-  padding: 24px 28px;
+  padding: 18px 28px 24px;
   display: flex;
   flex-direction: column;
+}
+
+.telemetryPanel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.telemetryItem {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(127, 183, 255, 0.16);
+  background: rgba(7, 16, 27, 0.72);
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 1.6px;
+  color: rgba(226, 243, 255, 0.72);
 }
 
 /* ── HUD FRAME — corner brackets around dashboard ───────────────────────── */
@@ -588,13 +427,45 @@
 }
 
 @media (max-width: 700px) {
+  .container {
+    min-height: 100dvh;
+  }
+
   .infoRow {
     grid-template-columns: 1fr;
   }
+
+  .logoText {
+    font-size: 11px;
+    letter-spacing: 2.4px;
+  }
+
+  .main {
+    padding: 16px 12px 88px;
+  }
+
+  .telemetryPanel {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .telemetryItem {
+    width: 100%;
+    border-radius: 14px;
+  }
+
+  .hudFrame {
+    padding: 0;
+  }
+
+  .cornerTL,
+  .cornerTR,
+  .cornerBL,
+  .cornerBR {
+    display: none;
+  }
+
   .portalGrid {
     grid-template-columns: repeat(3, 1fr);
-  }
-  .headerCenter {
-    display: none;
   }
 }

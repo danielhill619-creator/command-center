@@ -1,0 +1,251 @@
+.shell {
+  position: relative;
+  min-height: 100vh;
+}
+
+.content {
+  min-height: 100vh;
+  padding-left: 76px;
+}
+
+.mobileToggle {
+  display: none;
+}
+
+.backdrop {
+  display: none;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1200;
+  width: 76px;
+  padding: 18px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background:
+    radial-gradient(circle at top left, rgba(67, 166, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 85% 12%, rgba(65, 224, 178, 0.1), transparent 24%),
+    linear-gradient(180deg, rgba(10, 18, 29, 0.92), rgba(8, 14, 22, 0.88));
+  border-right: 1px solid rgba(151, 196, 255, 0.12);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px);
+  transition: width 0.22s ease, transform 0.22s ease;
+}
+
+.sidebarOpen {
+  width: 280px;
+}
+
+.sidebarTop,
+.sidebarBottom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.brand {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(151, 196, 255, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4fbff;
+  cursor: pointer;
+}
+
+.brandMark,
+.navIcon {
+  width: 28px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  color: #8ce9ff;
+  text-shadow: 0 0 18px rgba(80, 216, 255, 0.42);
+}
+
+.brandText,
+.groupLabel,
+.navLabel,
+.account {
+  opacity: 0;
+  transform: translateX(-8px);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.brandTextVisible,
+.groupLabelVisible,
+.navLabelVisible,
+.accountVisible {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.brandText {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.account {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.accountLabel {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(142, 219, 255, 0.72);
+  margin-bottom: 6px;
+}
+
+.accountValue {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(240, 248, 255, 0.86);
+  overflow-wrap: anywhere;
+}
+
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupLabel {
+  padding: 0 12px;
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(140, 209, 255, 0.54);
+}
+
+.navItem,
+.signOutBtn {
+  --nav-color: #8ce9ff;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 12px;
+  border-radius: 18px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(232, 244, 255, 0.76);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.navItem:hover,
+.signOutBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(124, 220, 255, 0.18);
+  transform: translateX(2px);
+}
+
+.navItemActive {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--nav-color) 22%, rgba(34, 118, 191, 0.18)), rgba(41, 201, 162, 0.08));
+  border-color: color-mix(in srgb, var(--nav-color) 38%, rgba(124, 220, 255, 0.18));
+  color: #ffffff;
+}
+
+.navItem .navIcon {
+  color: var(--nav-color);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--nav-color) 42%, transparent);
+}
+
+.navLabel {
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.sidebarBottom {
+  margin-top: auto;
+}
+
+.signOutBtn {
+  --nav-color: #ff9f9f;
+  border: 1px solid rgba(255, 120, 120, 0.12);
+  background: rgba(255, 80, 80, 0.03);
+}
+
+@media (max-width: 860px) {
+  .content {
+    padding-left: 0;
+  }
+
+  .mobileToggle {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 1300;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgba(124, 220, 255, 0.2);
+    border-radius: 16px;
+    background: rgba(4, 12, 22, 0.88);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    backdrop-filter: blur(14px);
+  }
+
+  .mobileToggle span {
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: #d8f7ff;
+  }
+
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1150;
+    background: rgba(1, 5, 12, 0.46);
+    border: none;
+  }
+
+  .sidebar {
+    width: 280px;
+    transform: translateX(-100%);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .brandText,
+  .groupLabel,
+  .navLabel,
+  .account {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+}
