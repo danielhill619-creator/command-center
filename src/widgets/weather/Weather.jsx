@@ -33,16 +33,9 @@ export default function Weather() {
     async function load() {
       try {
         let next = null
-        if (API_KEY && API_KEY !== 'PLACEHOLDER') {
-          try {
-            next = await loadOpenWeather()
-          } catch {}
-        }
-        if (!next) {
-          try {
-            next = await loadOpenMeteo()
-          } catch {}
-        }
+        try {
+          next = await loadOpenMeteo()
+        } catch {}
         if (!next) {
           next = await loadWttr()
         }

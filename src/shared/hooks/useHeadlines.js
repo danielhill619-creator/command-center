@@ -147,23 +147,34 @@ function toNewsPage(url) {
   return url.replace('&format=rss', '')
 }
 
+function extractRealUrl(link) {
+  try {
+    const u = new URL(link)
+    const embedded = u.searchParams.get('url')
+    if (embedded) return decodeURIComponent(embedded)
+  } catch {}
+  return link
+}
+
 async function hydrateHeadlines(items) {
-  const enriched = await Promise.all(items.map(async item => {
-    if (item.thumbnail) return item
+  const enriched = await Promise.allSettled(items.map(async item => {
+    const realUrl = extractRealUrl(item.link)
+    if (item.thumbnail) return { ...item, link: realUrl }
     try {
-      const res = await fetch(`${MICROLINK}${encodeURIComponent(item.link)}`)
-      if (!res.ok) return withSourceFallback(item)
+      const res = await fetch(`${MICROLINK}${encodeURIComponent(realUrl)}`, { signal: AbortSignal.timeout(5000) })
+      if (!res.ok) return { ...item, link: realUrl, thumbnail: sourceFavicon(realUrl) }
       const json = await res.json()
       return {
         ...item,
-        thumbnail: json.data?.image?.url || json.data?.logo?.url || sourceFavicon(item.link),
+        link: realUrl,
+        thumbnail: json.data?.image?.url || sourceFavicon(realUrl),
         source: json.data?.publisher || item.source,
       }
     } catch {
-      return withSourceFallback(item)
+      return { ...item, link: realUrl, thumbnail: sourceFavicon(realUrl) }
     }
   }))
-  return enriched
+  return enriched.map(r => r.status === 'fulfilled' ? r.value : r.reason)
 }
 
 function withSourceFallback(item) {
