@@ -25,18 +25,25 @@ async function initInBackground(currentUser, setSheetIds, setSheetsReady) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser]               = useState(null)
-  const [loading, setLoading]         = useState(true)
+  // auth.currentUser is populated synchronously from localStorage on Firebase init.
+  // Using it for initial state means ProtectedRoute never blocks on loading=true
+  // when the user is already signed in.
+  const [user, setUser]               = useState(auth.currentUser)
+  const [loading, setLoading]         = useState(!auth.currentUser)
   const [sheetIds, setSheetIds]       = useState(() => getCachedSheetIds())
   const [sheetsReady, setSheetsReady] = useState(false)
 
   useEffect(() => {
+    // Immediately kick off background init if we already have a user
+    if (auth.currentUser) {
+      initInBackground(auth.currentUser, setSheetIds, setSheetsReady)
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
-      setLoading(false) // resolve auth immediately — don't block on sheets/tokens
+      setLoading(false)
 
       if (currentUser) {
-        // Initialize sheets and tokens in the background, never block the route render
         initInBackground(currentUser, setSheetIds, setSheetsReady)
       } else {
         setSheetIds(null)

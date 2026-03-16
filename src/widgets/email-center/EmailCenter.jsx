@@ -498,7 +498,7 @@ export default function EmailCenter({ mode = 'widget' }) {
 
         {/* ── Reading pane ── */}
         <div className={styles.readPane}>
-          <button className={styles.mobileBackBtn} onClick={() => { mail.setSelectedId && mail.selectMessage && mail.setAccountId(mail.accountId) ; window.dispatchEvent(new CustomEvent('cc:mail-back')) }}>
+          <button className={styles.mobileBackBtn} onClick={() => mail.setSelectedId(null)}>
             ← Back to inbox
           </button>
           {!mail.selectedMessage && (

@@ -306,6 +306,7 @@ function useMailCenterState() {
     bridgeUrl,
     messages: decoratedMessages,
     selectedId,
+    setSelectedId,
     selectedMessage,
     selectedThread: decoratedThread,
     accountId,
