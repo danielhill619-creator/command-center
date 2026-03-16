@@ -9,6 +9,21 @@ const AuthContext = createContext(null)
 
 export { getGoogleToken, storeGoogleToken }
 
+async function initInBackground(currentUser, setSheetIds, setSheetsReady) {
+  try {
+    const seeded = await seedTokenFromIDB()
+    const token  = seeded || await getGoogleToken({ interactive: false })
+    if (token) {
+      setAccessToken(token)
+      const ids = await initializeSheets()
+      setSheetIds(ids)
+      setSheetsReady(true)
+    }
+  } catch {
+    setSheetsReady(false)
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser]               = useState(null)
   const [loading, setLoading]         = useState(true)
@@ -16,35 +31,18 @@ export function AuthProvider({ children }) {
   const [sheetsReady, setSheetsReady] = useState(false)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
+      setLoading(false) // resolve auth immediately — don't block on sheets/tokens
 
       if (currentUser) {
-        try {
-          // Seed GIS with the Firebase-stored OAuth credential so it's immediately
-          // available this session without needing a GIS popup on first load
-          const seeded = await seedTokenFromIDB()
-
-          // Then get a GIS token (silent — no popup if consent was previously granted)
-          const token = seeded || await getGoogleToken({ interactive: false })
-
-          if (token) {
-            setAccessToken(token)
-            const ids = await initializeSheets()
-            setSheetIds(ids)
-            setSheetsReady(true)
-          }
-        } catch (err) {
-          console.error('[CC] Sheet init error:', err)
-          setSheetsReady(false)
-        }
+        // Initialize sheets and tokens in the background, never block the route render
+        initInBackground(currentUser, setSheetIds, setSheetsReady)
       } else {
         setSheetIds(null)
         setSheetsReady(false)
         clearGoogleToken()
       }
-
-      setLoading(false)
     })
 
     return () => unsubscribe()
