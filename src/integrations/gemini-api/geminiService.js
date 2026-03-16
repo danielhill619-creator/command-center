@@ -15,8 +15,12 @@ const GEMINI_MODEL_EVENT = 'cc:gemini-model-updated'
 function isToolCapableModel(model) {
   const name = (typeof model === 'string' ? model : model?.name || '').replace('models/', '')
   if (!name) return false
-  if (/tts|image|embedding|robotics|nano-banana|gemma/i.test(name)) return false
-  return /gemini|deep-research|computer-use/i.test(name)
+  // Exclude non-generative models regardless of family
+  if (/tts|image|embedding|robotics|nano-banana/i.test(name)) return false
+  // Exclude tiny Gemma variants not suitable for tool use
+  if (/gemma-3-1b|gemma-2-2b|gemma-.*nano/i.test(name)) return false
+  // Allow all Gemini and Gemma instruction-tuned models
+  return /gemini|gemma|deep-research|computer-use/i.test(name)
 }
 
 function getGeminiModel() {
