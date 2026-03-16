@@ -1,5 +1,6 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { getAuth, GoogleAuthProvider, reauthenticateWithPopup, signInWithPopup } from 'firebase/auth'
+import { getFreshGoogleOAuthToken } from '../../shared/hooks/useAuth'
 
 const STORAGE_KEY = 'cc_email_provider_auth_v1'
 
@@ -52,8 +53,8 @@ export function markStoredProviderAuthInvalid(accountId) {
     ...state[accountId],
     accessToken: null,
     expiresAt: 0,
-    connected: true,
-    lastError: 'Session expired. Attempting silent refresh.',
+    connected: false,
+    lastError: 'Session expired. Please reconnect this account.',
   }
   writeStore(state)
   return state[accountId]
@@ -161,6 +162,7 @@ export async function ensureStoredProviderAuth(accountId, provider) {
   const stored = getStoredProviderAuth(accountId)
   if (!stored) return null
 
+  // Token still fresh — clear any stale errors
   if (stored.accessToken && stored.expiresAt && stored.expiresAt > Date.now() + 30_000) {
     if (stored.lastError) {
       return upsertAccount(accountId, { connected: true, lastError: '' })
@@ -168,26 +170,30 @@ export async function ensureStoredProviderAuth(accountId, provider) {
     return stored
   }
 
+  // Token expired — try silent refresh
   if (provider === 'microsoft') {
     try {
       return await refreshMicrosoftMailToken(accountId)
     } catch {
-      return stored
+      return markStoredProviderAuthInvalid(accountId)
     }
   }
 
+  // Gmail — use the centralised OAuth token refresh (silent re-auth + IDB fallback)
   try {
-    const fresh = await getFirebaseGoogleToken()
-    if (!fresh) return stored
-    return upsertAccount(accountId, {
-      accessToken: fresh,
-      expiresAt: Date.now() + 3600 * 1000,
-      connected: true,
-      lastError: '',
-    })
-  } catch {
-    return stored
-  }
+    const fresh = await getFreshGoogleOAuthToken()
+    if (fresh) {
+      return upsertAccount(accountId, {
+        accessToken: fresh,
+        expiresAt: Date.now() + 55 * 60 * 1000,
+        connected: true,
+        lastError: '',
+      })
+    }
+  } catch {}
+
+  // Silent refresh failed — force reconnect
+  return markStoredProviderAuthInvalid(accountId)
 }
 
 export async function getLiveAccessToken(account) {
@@ -203,13 +209,13 @@ export async function getLiveAccessToken(account) {
     return refreshed.accessToken
   }
 
-  // Gmail — try to pull a fresh token from Firebase's IndexedDB session
+  // Gmail — use the centralised OAuth token refresh
   if (account.provider === 'gmail') {
-    const fresh = await getFirebaseGoogleToken()
+    const fresh = await getFreshGoogleOAuthToken()
     if (fresh) {
       upsertAccount(account.id, {
         accessToken: fresh,
-        expiresAt: Date.now() + 3600 * 1000,
+        expiresAt: Date.now() + 55 * 60 * 1000,
         connected: true,
         lastError: '',
       })
@@ -220,37 +226,7 @@ export async function getLiveAccessToken(account) {
   return null
 }
 
-async function getFirebaseGoogleToken() {
-  try {
-    const db = await new Promise((res, rej) => {
-      const r = indexedDB.open('firebaseLocalStorageDb')
-      r.onsuccess = () => res(r.result)
-      r.onerror  = () => rej(r.error)
-    })
-    const tx    = db.transaction('firebaseLocalStorage', 'readonly')
-    const store = tx.objectStore('firebaseLocalStorage')
-    const keys  = await new Promise((res, rej) => {
-      const r = store.getAllKeys()
-      r.onsuccess = () => res(r.result)
-      r.onerror   = () => rej(r.error)
-    })
-    for (const key of keys) {
-      const record = await new Promise((res, rej) => {
-        const r = store.get(key)
-        r.onsuccess = () => res(r.result)
-        r.onerror   = () => rej(r.error)
-      })
-      const token =
-        record?.value?.credential?.oauthAccessToken ??
-        record?.value?.stsTokenManager?.accessToken ??
-        null
-      if (token) return token
-    }
-    return null
-  } catch {
-    return null
-  }
-}
+
 
 export function getProviderConfigStatus() {
   return {

@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'cc_news_preferences_v1'
-const BING_NEWS = 'https://www.bing.com/news/search'
+const GOOGLE_NEWS = 'https://news.google.com/rss'
+const BING_NEWS   = 'https://www.bing.com/news/search'
 
 export const DEFAULT_NEWS_PREFERENCES = {
   topics: [
@@ -34,10 +35,15 @@ const TOPIC_QUERY_MAP = {
   'Global Elite Corruption': 'global elite corruption OR oligarch scandal OR government business collusion',
 }
 
-const ORGANIZATION_QUERY_MAP = {
-  'Reuters': 'site:reuters.com',
-  'AP': 'site:apnews.com OR "Associated Press"',
-  'YouVersion Bible': 'YouVersion Bible',
+// Organizations with dedicated RSS feeds that include thumbnails
+const ORGANIZATION_RSS_MAP = {
+  'Reuters':        'https://feeds.reuters.com/reuters/topNews',
+  'AP':             'https://rsshub.app/apnews/topics/apf-topnews',
+  'NPR':            'https://feeds.npr.org/1001/rss.xml',
+  'BBC':            'https://feeds.bbci.co.uk/news/rss.xml',
+  'The Guardian':   'https://www.theguardian.com/world/rss',
+  'YouVersion Bible': `${BING_NEWS}?q=${encodeURIComponent('YouVersion Bible')}&format=rss`,
+  'AP News':        'https://rsshub.app/apnews/topics/apf-topnews',
 }
 
 function normalizeList(value) {
@@ -84,24 +90,25 @@ export function resetNewsPreferences() {
 function buildSearchFeed(label, query) {
   return {
     label,
-    url: `${BING_NEWS}?q=${encodeURIComponent(query)}&format=rss`,
+    url: `${GOOGLE_NEWS}/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`,
   }
 }
 
 function buildTopicFeed(label) {
   if (label === 'U.S. Top Stories') {
-    return buildSearchFeed(label, 'U.S. top stories')
+    return { label, url: `${GOOGLE_NEWS}?hl=en-US&gl=US&ceid=US:en` }
   }
-
   if (label === 'Global Top Stories') {
-    return buildSearchFeed(label, 'global top stories')
+    return { label, url: `${GOOGLE_NEWS}?hl=en&gl=US&ceid=US:en` }
   }
-
   return buildSearchFeed(label, TOPIC_QUERY_MAP[label] || label)
 }
 
 function buildOrganizationFeed(label) {
-  return buildSearchFeed(label, ORGANIZATION_QUERY_MAP[label] || label)
+  if (ORGANIZATION_RSS_MAP[label]) {
+    return { label, url: ORGANIZATION_RSS_MAP[label] }
+  }
+  return buildSearchFeed(label, label)
 }
 
 export function buildNewsFeeds(preferences = loadNewsPreferences()) {

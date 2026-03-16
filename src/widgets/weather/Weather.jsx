@@ -7,20 +7,42 @@ const DEFAULT_CITY_LABEL = 'Toccoa, GA'
 const DISPLAY_TIMEZONE = 'America/New_York'
 
 const ICON_MAP = {
-  '01': '☀',  // clear sky
-  '02': '⛅', // few clouds
-  '03': '☁',  // scattered clouds
-  '04': '☁',  // broken clouds
-  '09': '🌧', // shower rain
-  '10': '🌦', // rain
-  '11': '⛈', // thunderstorm
-  '13': '❄',  // snow
-  '50': '🌫', // mist
+  '01d': '☀',  // clear day
+  '01n': '🌙', // clear night
+  '02d': '⛅', // few clouds day
+  '02n': '☁',  // few clouds night
+  '03d': '☁',  // scattered clouds
+  '03n': '☁',
+  '04d': '☁',  // broken clouds
+  '04n': '☁',
+  '09d': '🌧', // shower rain
+  '09n': '🌧',
+  '10d': '🌦', // rain day
+  '10n': '🌧', // rain night
+  '11d': '⛈', // thunderstorm
+  '11n': '⛈',
+  '13d': '❄',  // snow
+  '13n': '❄',
+  '50d': '🌫', // mist
+  '50n': '🌫',
 }
 
-function weatherIcon(iconCode) {
-  const prefix = iconCode?.slice(0, 2)
-  return ICON_MAP[prefix] ?? '◈'
+function isNight(sunriseStr, sunsetStr) {
+  const now = new Date()
+  const sunrise = sunriseStr ? new Date(sunriseStr) : null
+  const sunset  = sunsetStr  ? new Date(sunsetStr)  : null
+  if (!sunrise || !sunset) {
+    const hour = getEasternNow().getHours()
+    return hour < 6 || hour >= 20
+  }
+  return now < sunrise || now > sunset
+}
+
+function weatherIcon(iconCode, night = false) {
+  if (!iconCode) return '◈'
+  const prefix = iconCode.slice(0, 2)
+  const suffix = night ? 'n' : (iconCode.endsWith('n') ? 'n' : 'd')
+  return ICON_MAP[`${prefix}${suffix}`] ?? ICON_MAP[`${prefix}d`] ?? '◈'
 }
 
 export default function Weather() {
@@ -67,7 +89,7 @@ export default function Weather() {
       {data && (
         <>
           <div className={styles.main}>
-            <span className={styles.icon}>{weatherIcon(data.icon)}</span>
+            <span className={styles.icon}>{weatherIcon(data.icon, isNight(data.sunriseRaw, data.sunsetRaw))}</span>
             <span className={styles.temp}>{data.temp}°</span>
           </div>
           <div className={styles.city}>{data.city}</div>
@@ -237,6 +259,8 @@ async function loadOpenMeteo() {
     description: describeWeatherCode(json.current.weather_code),
     icon: weatherCodeToIcon(json.current.weather_code),
     wind: Math.round(json.current.wind_speed_10m),
+    sunriseRaw: json.daily.sunrise?.[0] ?? null,
+    sunsetRaw: json.daily.sunset?.[0] ?? null,
     sunrise: formatClock(json.daily.sunrise?.[0]),
     sunset: formatClock(json.daily.sunset?.[0]),
     hourly: buildHourlyForecast(json),
@@ -291,15 +315,24 @@ function buildHourlyForecast(json) {
   const nowHourStr = getEasternHourString()
   const startIndex = times.findIndex(time => time >= nowHourStr)
   const begin = startIndex >= 0 ? startIndex : 0
-  return times.slice(begin, begin + 12).map((time, index) => ({
-    time,
-    label: formatClock(time),
-    temp: Math.round(json.hourly.temperature_2m?.[begin + index] ?? 0),
-    feels: Math.round(json.hourly.apparent_temperature?.[begin + index] ?? 0),
-    rain: Math.round(json.hourly.precipitation_probability?.[begin + index] ?? 0),
-    wind: Math.round(json.hourly.wind_speed_10m?.[begin + index] ?? 0),
-    icon: weatherCodeToIcon(json.hourly.weather_code?.[begin + index]),
-  }))
+  const sunrisesByDate = {}
+  const sunsetsByDate = {}
+  ;(json.daily?.sunrise || []).forEach(s => { sunrisesByDate[s.slice(0, 10)] = s })
+  ;(json.daily?.sunset  || []).forEach(s => { sunsetsByDate[s.slice(0, 10)]  = s })
+  return times.slice(begin, begin + 12).map((time, index) => {
+    const date = time.slice(0, 10)
+    const night = isNight(sunrisesByDate[date], sunsetsByDate[date])
+    const code  = json.hourly.weather_code?.[begin + index]
+    return {
+      time,
+      label: formatClock(time),
+      temp:  Math.round(json.hourly.temperature_2m?.[begin + index] ?? 0),
+      feels: Math.round(json.hourly.apparent_temperature?.[begin + index] ?? 0),
+      rain:  Math.round(json.hourly.precipitation_probability?.[begin + index] ?? 0),
+      wind:  Math.round(json.hourly.wind_speed_10m?.[begin + index] ?? 0),
+      icon:  weatherCodeToIcon(code, night),
+    }
+  })
 }
 
 function getEasternHourString() {

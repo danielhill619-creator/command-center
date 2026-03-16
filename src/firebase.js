@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
+import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence } from 'firebase/auth'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,6 +12,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
+
+// Explicitly persist the Firebase session in localStorage so it survives
+// browser restarts, tab closes, and OS-level cache pressure
+setPersistence(auth, browserLocalPersistence).catch(() => {})
+
 export const googleProvider = new GoogleAuthProvider()
 
 // Request scopes needed for Google APIs

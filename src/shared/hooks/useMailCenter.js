@@ -67,10 +67,17 @@ function useMailCenterState() {
     setLoading(!cached)
     setFetchError('')
     try {
-      const [state, rows] = await Promise.all([
-        getEmailState(),
-        listMessages({ accountId, folder, query }),
-      ])
+      // Fetch messages first — this may mark accounts as disconnected in localStorage
+      // Then fetch account state so it reflects any auth invalidations from the message fetch
+      let rows = []
+      let fetchErr = null
+      try {
+        rows = await listMessages({ accountId, folder, query })
+      } catch (e) {
+        fetchErr = e
+      }
+      // Always re-read account state AFTER messages so auth invalidations are reflected
+      const state = await getEmailState()
       if (refreshSeq !== refreshSeqRef.current) return
       cache.current.set(cacheKey, rows)
       setBridge(state.bridge || null)
@@ -78,6 +85,7 @@ function useMailCenterState() {
       setAccounts(state.accounts)
       setFolders(state.folders)
       setMessages(rows)
+      if (fetchErr && !rows.length) setFetchError(fetchErr.message)
       if (selectedIdRef.current && !rows.some(message => message.id === selectedIdRef.current)) {
         setSelectedId(rows[0]?.id ?? null)
         setSelectedThread(rows[0] ? [rows[0]] : [])

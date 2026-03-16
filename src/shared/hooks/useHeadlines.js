@@ -38,15 +38,16 @@ async function fetchFeed(feed) {
 }
 
 async function fetchFeedViaJson(feed) {
-  const res = await fetch(`${RSS2JSON}?rss_url=${encodeURIComponent(feed.url)}&count=6`)
+  const res = await fetch(`${RSS2JSON}?rss_url=${encodeURIComponent(feed.url)}`)
   if (!res.ok) throw new Error(`Feed request failed for ${feed.label}`)
   const data = await res.json()
-  return (data.items || []).map(item => ({
+  if (data.status !== 'ok') throw new Error(`Feed error for ${feed.label}: ${data.message}`)
+  return (data.items || []).slice(0, 5).map(item => ({
     title: item.title || feed.label,
     link: item.link,
     pub: item.pubDate || new Date().toUTCString(),
     thumbnail: item.thumbnail || item.enclosure?.link || null,
-    source: item.source?.title || feed.label,
+    source: data.feed?.title || feed.label,
   })).filter(item => item.link)
 }
 
