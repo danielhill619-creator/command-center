@@ -27,7 +27,26 @@
 }
 
 .layoutWorkspace {
-  grid-template-columns: 240px 360px 1fr;
+  grid-template-columns: 240px 8px 360px 8px 1fr;
+}
+
+.paneHandle {
+  width: 8px;
+  cursor: col-resize;
+  position: relative;
+  background: linear-gradient(180deg, transparent, rgba(143,181,255,0.12), transparent);
+}
+
+.paneHandle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(143,181,255,0.24);
 }
 
 /* ── Left Nav ── */
@@ -217,6 +236,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .headerPillBtn {
@@ -354,6 +375,8 @@
   color: inherit;
   position: relative;
   transition: background 0.1s;
+  min-height: 88px;
+  box-sizing: border-box;
 }
 .msgRow:hover { background: rgba(255,255,255,0.04); }
 
@@ -398,6 +421,14 @@
   margin-bottom: 2px;
 }
 
+.msgMetaCluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .msgFrom {
   font-size: 13px;
   color: rgba(255,255,255,0.7);
@@ -411,6 +442,39 @@
   font-size: 11px;
   color: rgba(255,255,255,0.38);
   flex-shrink: 0;
+}
+
+.msgFlagStar,
+.msgFlagImportant,
+.msgFlagFollow,
+.msgFlagSnooze {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.msgFlagStar {
+  color: #ffd86b;
+  background: rgba(255,216,107,0.12);
+}
+
+.msgFlagImportant {
+  color: #ff9e74;
+  background: rgba(255,120,120,0.12);
+}
+
+.msgFlagFollow {
+  color: #8fc1ff;
+  background: rgba(98,176,245,0.12);
+}
+
+.msgFlagSnooze {
+  color: #9ce4c2;
+  background: rgba(62,183,166,0.14);
 }
 
 .msgSubject {

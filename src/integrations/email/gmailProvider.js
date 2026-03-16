@@ -124,6 +124,7 @@ export function gmailNormalizeMessage(account, msg) {
     receivedAt: new Date(Number(msg.internalDate || Date.now())).toISOString(),
     read: !labels.includes('UNREAD'),
     starred: labels.includes('STARRED'),
+    important: labels.includes('IMPORTANT'),
     hasAttachments: JSON.stringify(msg.payload || {}).includes('attachmentId'),
     attachments: [],
     live: true,

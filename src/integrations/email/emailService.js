@@ -349,6 +349,46 @@ export async function deleteMessage(messageId, accountId = null) {
   return moveMessage(messageId, 'Trash', accountId)
 }
 
+export async function toggleStar(messageId, starred = true, accountId = null) {
+  const state = readState()
+  const base = state.messages.find(m => m.id === messageId)
+  const resolvedAccountId = base?.accountId || accountId
+  if (resolvedAccountId) {
+    const account = getAccount(state, resolvedAccountId)
+    if (account.connected && account.provider === 'gmail') {
+      try {
+        await gmailModifyMessage(account, messageId, starred ? ['STARRED'] : [], starred ? [] : ['STARRED'])
+      } catch (e) {
+        if (isAuthError(e)) invalidateAccountAuth(account.id)
+        throw e
+      }
+    }
+  }
+  state.messages = state.messages.map(m => m.id === messageId ? { ...m, starred } : m)
+  writeState(state)
+  return true
+}
+
+export async function toggleImportant(messageId, important = true, accountId = null) {
+  const state = readState()
+  const base = state.messages.find(m => m.id === messageId)
+  const resolvedAccountId = base?.accountId || accountId
+  if (resolvedAccountId) {
+    const account = getAccount(state, resolvedAccountId)
+    if (account.connected && account.provider === 'gmail') {
+      try {
+        await gmailModifyMessage(account, messageId, important ? ['IMPORTANT'] : [], important ? [] : ['IMPORTANT'])
+      } catch (e) {
+        if (isAuthError(e)) invalidateAccountAuth(account.id)
+        throw e
+      }
+    }
+  }
+  state.messages = state.messages.map(m => m.id === messageId ? { ...m, important } : m)
+  writeState(state)
+  return true
+}
+
 export async function composeMessage({ accountId, to, cc = [], subject, body }) {
   const bridge = await getBridgeState()
   if (bridge) {

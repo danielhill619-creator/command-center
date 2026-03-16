@@ -13,10 +13,25 @@ import {
   moveMessage,
   removeAccount,
   replyToMessage,
+  toggleImportant,
+  toggleStar,
   toggleAccountConnected,
 } from '../../integrations/email/emailService'
 
 const MailCenterContext = createContext(null)
+const META_STORAGE_KEY = 'cc_email_meta_v1'
+
+function readMetaStore() {
+  try {
+    return JSON.parse(localStorage.getItem(META_STORAGE_KEY) || '{}')
+  } catch {
+    return { snoozed: {}, followUp: {} }
+  }
+}
+
+function writeMetaStore(value) {
+  localStorage.setItem(META_STORAGE_KEY, JSON.stringify(value))
+}
 
 function useMailCenterState() {
   const [accounts, setAccounts]         = useState([])
@@ -33,6 +48,7 @@ function useMailCenterState() {
   const [busy, setBusy]                 = useState(false)
   const [fetchError, setFetchError]     = useState('')
   const [actionError, setActionError]   = useState('')
+  const [metaStore, setMetaStore]       = useState(readMetaStore)
   const cache  = useRef(new Map())
   const threadCache = useRef(new Map())
   const refreshSeqRef = useRef(0)
@@ -120,6 +136,30 @@ function useMailCenterState() {
     })
   }, [accounts, getCacheKey])
 
+  useEffect(() => {
+    if (query.trim()) return
+    if (document.visibilityState !== 'visible') return
+    const id = window.setInterval(() => {
+      if (!busy) refresh().catch(() => {})
+    }, 60000)
+    return () => window.clearInterval(id)
+  }, [busy, query, refresh])
+
+  useEffect(() => {
+    if (accountId === 'all' || query.trim()) return
+    const warmFolders = ['Inbox', 'Archive', 'Sent']
+    warmFolders
+      .filter(name => name !== folder)
+      .forEach(name => {
+        const key = getCacheKey(accountId, name, '')
+        if (!cache.current.has(key)) {
+          listMessages({ accountId, folder: name, query: '' })
+            .then(rows => cache.current.set(key, rows))
+            .catch(() => {})
+        }
+      })
+  }, [accountId, folder, getCacheKey, query])
+
   function removeMessageLocally(id) {
     setMessages(prev => {
       const index = prev.findIndex(message => message.id === id)
@@ -172,9 +212,35 @@ function useMailCenterState() {
     }
   }
 
+  function updateMeta(updater) {
+    setMetaStore(prev => {
+      const next = updater(prev)
+      writeMetaStore(next)
+      return next
+    })
+  }
+
+  function decorateMessage(message) {
+    return {
+      ...message,
+      snoozedUntil: metaStore.snoozed?.[message.id] || '',
+      followUpAt: metaStore.followUp?.[message.id] || '',
+    }
+  }
+
+  const decoratedMessages = useMemo(
+    () => messages.map(decorateMessage),
+    [messages, metaStore]
+  )
+
+  const decoratedThread = useMemo(
+    () => selectedThread.map(decorateMessage),
+    [selectedThread, metaStore]
+  )
+
   const selectedMessage = useMemo(
-    () => messages.find(m => m.id === selectedId) ?? null,
-    [messages, selectedId]
+    () => decoratedMessages.find(m => m.id === selectedId) ?? null,
+    [decoratedMessages, selectedId]
   )
 
   return {
@@ -183,10 +249,10 @@ function useMailCenterState() {
     folders,
     bridge,
     bridgeUrl,
-    messages,
+    messages: decoratedMessages,
     selectedId,
     selectedMessage,
-    selectedThread,
+    selectedThread: decoratedThread,
     accountId,
     setAccountId,
     folder,
@@ -214,6 +280,14 @@ function useMailCenterState() {
       () => deleteMessage(id, accountId),
       () => removeMessageLocally(id)
     ),
+    toggleStar:            (id, starred, accountId) => perform(
+      () => toggleStar(id, starred, accountId),
+      () => updateMessageLocally(id, message => ({ ...message, starred }))
+    ),
+    toggleImportant:       (id, important, accountId) => perform(
+      () => toggleImportant(id, important, accountId),
+      () => updateMessageLocally(id, message => ({ ...message, important }))
+    ),
     bulkMarkRead:          entries => perform(
       () => Promise.all(entries.map(entry => markRead(entry.id, entry.read, entry.accountId))),
       () => updateMessagesLocally(entries.map(entry => entry.id), message => {
@@ -229,6 +303,24 @@ function useMailCenterState() {
       () => Promise.all(entries.map(entry => deleteMessage(entry.id, entry.accountId))),
       () => removeMessagesLocally(entries.map(entry => entry.id))
     ),
+    setSnooze:             (id, until) => updateMeta(prev => ({
+      ...prev,
+      snoozed: { ...(prev.snoozed || {}), [id]: until },
+    })),
+    clearSnooze:           id => updateMeta(prev => {
+      const next = { ...(prev.snoozed || {}) }
+      delete next[id]
+      return { ...prev, snoozed: next }
+    }),
+    setFollowUp:           (id, until) => updateMeta(prev => ({
+      ...prev,
+      followUp: { ...(prev.followUp || {}), [id]: until },
+    })),
+    clearFollowUp:         id => updateMeta(prev => {
+      const next = { ...(prev.followUp || {}) }
+      delete next[id]
+      return { ...prev, followUp: next }
+    }),
     composeMessage:        payload       => perform(() => composeMessage(payload)),
     replyToMessage:        (id, payload) => perform(() => replyToMessage(id, payload)),
     forwardMessage:        (id, payload) => perform(() => forwardMessage(id, payload)),

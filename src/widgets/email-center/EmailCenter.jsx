@@ -5,6 +5,9 @@ import { getProviderConfigStatus } from '../../integrations/email/emailAuth'
 import styles from './EmailCenter.module.css'
 
 const PROVIDER_CONFIG = getProviderConfigStatus()
+const VIRTUAL_ROW_HEIGHT = 88
+const OVERSCAN_ROWS = 6
+const PANE_STORAGE_KEY = 'cc_mail_workspace_panes_v1'
 
 const FOLDERS = ['Inbox', 'Drafts', 'Sent', 'Archive', 'Trash']
 const FOLDER_ICONS = { Inbox: '📥', Drafts: '📝', Sent: '📤', Archive: '📦', Trash: '🗑' }
@@ -86,6 +89,16 @@ export default function EmailCenter({ mode = 'widget' }) {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [unreadOnly, setUnreadOnly] = useState(false)
+  const [showSnoozed, setShowSnoozed] = useState(false)
+  const [listScrollTop, setListScrollTop] = useState(0)
+  const [listHeight, setListHeight] = useState(700)
+  const [paneSizes, setPaneSizes] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(PANE_STORAGE_KEY) || '{"nav":260,"list":420}')
+    } catch {
+      return { nav: 260, list: 420 }
+    }
+  })
 
   const activeFolders = useMemo(() => {
     if (mail.accountId === 'all') return FOLDERS
@@ -96,9 +109,15 @@ export default function EmailCenter({ mode = 'widget' }) {
     () => mail.accounts.filter(account => account.authError),
     [mail.accounts]
   )
+  const nowTs = Date.now()
   const visibleMessages = useMemo(
-    () => unreadOnly ? mail.messages.filter(message => !message.read) : mail.messages,
-    [mail.messages, unreadOnly]
+    () => mail.messages.filter(message => {
+      const snoozed = message.snoozedUntil && new Date(message.snoozedUntil).getTime() > nowTs
+      if (!showSnoozed && snoozed) return false
+      if (unreadOnly && message.read) return false
+      return true
+    }),
+    [mail.messages, nowTs, showSnoozed, unreadOnly]
   )
   const selectedEntries = useMemo(
     () => visibleMessages.filter(message => selectedIds.includes(message.id)).map(message => ({ id: message.id, accountId: message.accountId })),
@@ -108,21 +127,88 @@ export default function EmailCenter({ mode = 'widget' }) {
     () => mail.messages.filter(message => !message.read).length,
     [mail.messages]
   )
+  const followUpCount = useMemo(
+    () => mail.messages.filter(message => message.followUpAt).length,
+    [mail.messages]
+  )
   const rowRefs = useRef(new Map())
+  const messageListRef = useRef(null)
+
+  const totalRows = visibleMessages.length
+  const startIndex = Math.max(0, Math.floor(listScrollTop / VIRTUAL_ROW_HEIGHT) - OVERSCAN_ROWS)
+  const endIndex = Math.min(totalRows, Math.ceil((listScrollTop + listHeight) / VIRTUAL_ROW_HEIGHT) + OVERSCAN_ROWS)
+  const virtualRows = visibleMessages.slice(startIndex, endIndex)
+  const topSpacer = startIndex * VIRTUAL_ROW_HEIGHT
+  const bottomSpacer = Math.max(0, (totalRows - endIndex) * VIRTUAL_ROW_HEIGHT)
 
   useEffect(() => {
     if (!mail.selectedId) return
-    rowRefs.current.get(mail.selectedId)?.scrollIntoView({ block: 'nearest' })
-  }, [mail.selectedId])
+    const node = rowRefs.current.get(mail.selectedId)
+    if (node) {
+      node.scrollIntoView({ block: 'nearest' })
+      return
+    }
+    const index = visibleMessages.findIndex(message => message.id === mail.selectedId)
+    if (index >= 0 && messageListRef.current) {
+      messageListRef.current.scrollTop = Math.max(0, index * VIRTUAL_ROW_HEIGHT - VIRTUAL_ROW_HEIGHT)
+    }
+  }, [mail.selectedId, visibleMessages])
+
+  useEffect(() => {
+    if (!messageListRef.current) return
+    const element = messageListRef.current
+    const syncHeight = () => setListHeight(element.clientHeight || 700)
+    syncHeight()
+    const observer = new ResizeObserver(syncHeight)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     setSelectedIds(prev => prev.filter(id => mail.messages.some(message => message.id === id)))
   }, [mail.messages])
 
   useEffect(() => {
+    localStorage.setItem(PANE_STORAGE_KEY, JSON.stringify(paneSizes))
+  }, [paneSizes])
+
+  useEffect(() => {
     const lastMessage = mail.selectedThread[mail.selectedThread.length - 1]
     setExpandedMessageId(lastMessage?.id || null)
   }, [mail.selectedThread])
+
+  useEffect(() => {
+    if (mode !== 'workspace') return
+
+    function isTypingTarget(target) {
+      const tag = target?.tagName?.toLowerCase()
+      return tag === 'input' || tag === 'textarea' || target?.isContentEditable
+    }
+
+    function onKeyDown(e) {
+      if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'j') { e.preventDefault(); moveSelection(1); return }
+      if (e.key === 'k') { e.preventDefault(); moveSelection(-1); return }
+      if (e.key === 'c') { e.preventDefault(); setComposeOpen(true); return }
+      if (e.key === 'e' && mail.selectedMessage) { e.preventDefault(); mail.archiveMessage(mail.selectedMessage.id, mail.selectedMessage.accountId); return }
+      if ((e.key === 'Delete' || e.key === '#') && mail.selectedMessage) { e.preventDefault(); mail.deleteMessage(mail.selectedMessage.id, mail.selectedMessage.accountId); return }
+      if (e.key === 'm' && mail.selectedMessage) { e.preventDefault(); mail.markRead(mail.selectedMessage.id, !mail.selectedMessage.read, mail.selectedMessage.accountId); return }
+      if (e.key === 'r' && mail.selectedMessage) { e.preventDefault(); setReplyOpen(true); return }
+      if (e.key === 'f' && mail.selectedMessage) { e.preventDefault(); setForwardOpen(true); return }
+      if (e.key === 's' && mail.selectedMessage) { e.preventDefault(); mail.toggleStar(mail.selectedMessage.id, !mail.selectedMessage.starred, mail.selectedMessage.accountId); return }
+      if (e.key === '!') { e.preventDefault(); if (mail.selectedMessage) mail.toggleImportant(mail.selectedMessage.id, !mail.selectedMessage.important, mail.selectedMessage.accountId); return }
+      if (e.key === 'z' && mail.selectedMessage) { e.preventDefault(); mail.setSnooze(mail.selectedMessage.id, new Date(Date.now() + 86400000).toISOString()); return }
+      if (e.key === 'y' && mail.selectedMessage) { e.preventDefault(); mail.setFollowUp(mail.selectedMessage.id, new Date(Date.now() + 86400000).toISOString()); return }
+      if (e.key === 'x') {
+        e.preventDefault()
+        setSelectMode(value => !value)
+        if (mail.selectedMessage) toggleSelection(mail.selectedMessage.id)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [mail, mode, visibleMessages])
 
   async function handleAccountAuth(account, e) {
     e.stopPropagation()
@@ -153,6 +239,30 @@ export default function EmailCenter({ mode = 'widget' }) {
       e.preventDefault()
       await moveSelection(-1)
     }
+  }
+
+  function startPaneDrag(type, e) {
+    if (mode !== 'workspace') return
+    const startX = e.clientX
+    const origin = paneSizes[type]
+
+    function handleMove(ev) {
+      const next = origin + (ev.clientX - startX)
+      setPaneSizes(prev => ({
+        ...prev,
+        [type]: type === 'nav'
+          ? Math.min(340, Math.max(220, next))
+          : Math.min(560, Math.max(320, next)),
+      }))
+    }
+
+    function handleUp() {
+      window.removeEventListener('pointermove', handleMove)
+      window.removeEventListener('pointerup', handleUp)
+    }
+
+    window.addEventListener('pointermove', handleMove)
+    window.addEventListener('pointerup', handleUp)
   }
 
   function toggleSelection(id) {
@@ -187,7 +297,10 @@ export default function EmailCenter({ mode = 'widget' }) {
 
   return (
     <div className={`${styles.shell} ${mode === 'workspace' ? styles.shellWorkspace : ''}`}>
-      <div className={`${styles.layout} ${mode === 'workspace' ? styles.layoutWorkspace : ''}`}>
+      <div
+        className={`${styles.layout} ${mode === 'workspace' ? styles.layoutWorkspace : ''}`}
+        style={mode === 'workspace' ? { gridTemplateColumns: `${paneSizes.nav}px 8px ${paneSizes.list}px 8px minmax(0, 1fr)` } : undefined}
+      >
 
         {/* ── Left nav ── */}
         <nav className={styles.nav}>
@@ -243,6 +356,8 @@ export default function EmailCenter({ mode = 'widget' }) {
           </button>
         </nav>
 
+        {mode === 'workspace' && <div className={styles.paneHandle} onPointerDown={e => startPaneDrag('nav', e)} />}
+
         {/* ── Message list ── */}
         <div className={styles.listCol}>
           <div className={styles.listHeader}>
@@ -254,6 +369,7 @@ export default function EmailCenter({ mode = 'widget' }) {
               <div className={styles.listMetaBar}>
                 <span>{visibleMessages.length} shown</span>
                 <span>{unreadCount} unread</span>
+                <span>{followUpCount} follow-up</span>
               </div>
             </div>
             <div className={styles.listHeaderActions}>
@@ -264,6 +380,9 @@ export default function EmailCenter({ mode = 'widget' }) {
               )}
               <button className={`${styles.headerPillBtn} ${unreadOnly ? styles.headerPillBtnActive : ''}`} onClick={() => setUnreadOnly(value => !value)}>
                 Unread only
+              </button>
+              <button className={`${styles.headerPillBtn} ${showSnoozed ? styles.headerPillBtnActive : ''}`} onClick={() => setShowSnoozed(value => !value)}>
+                Snoozed
               </button>
               <button className={`${styles.headerPillBtn} ${selectMode ? styles.headerPillBtnActive : ''}`} onClick={() => { setSelectMode(value => !value); setSelectedIds([]) }}>
                 Select
@@ -297,7 +416,7 @@ export default function EmailCenter({ mode = 'widget' }) {
             </div>
           )}
 
-          <div className={styles.messageList} tabIndex={0} onKeyDown={handleListKeyDown}>
+          <div ref={messageListRef} className={styles.messageList} tabIndex={0} onKeyDown={handleListKeyDown} onScroll={e => setListScrollTop(e.currentTarget.scrollTop)}>
             {mail.loading && !mail.messages.length && (
               <div className={styles.listStatus}>Loading...</div>
             )}
@@ -318,7 +437,8 @@ export default function EmailCenter({ mode = 'widget' }) {
             {!mail.loading && !mail.fetchError && mail.messages.length === 0 && mail.accounts.length > 0 && (
               <div className={styles.listStatus}>{staleAccounts.length > 0 ? 'Reconnect your Gmail account to load messages.' : 'No messages'}</div>
             )}
-            {visibleMessages.map(msg => (
+            {topSpacer > 0 && <div style={{ height: topSpacer }} />}
+            {virtualRows.map(msg => (
               <button
                 key={msg.id}
                 ref={node => {
@@ -339,7 +459,13 @@ export default function EmailCenter({ mode = 'widget' }) {
                 <div className={styles.msgBody}>
                   <div className={styles.msgTop}>
                     <span className={styles.msgFrom}>{senderName(msg.from)}</span>
-                    <span className={styles.msgTime}>{fmtTime(msg.receivedAt)}</span>
+                    <div className={styles.msgMetaCluster}>
+                      {msg.followUpAt && <span className={styles.msgFlagFollow}>Follow-up</span>}
+                      {msg.snoozedUntil && <span className={styles.msgFlagSnooze}>Snoozed</span>}
+                      {msg.important && <span className={styles.msgFlagImportant}>!</span>}
+                      {msg.starred && <span className={styles.msgFlagStar}>★</span>}
+                      <span className={styles.msgTime}>{fmtTime(msg.receivedAt)}</span>
+                    </div>
                   </div>
                   <div className={styles.msgSubject}>{msg.subject}</div>
                   <div className={styles.msgPreview}>{msg.preview}</div>
@@ -347,8 +473,11 @@ export default function EmailCenter({ mode = 'widget' }) {
                 {!msg.read && <span className={styles.unreadDot} />}
               </button>
             ))}
+            {bottomSpacer > 0 && <div style={{ height: bottomSpacer }} />}
           </div>
         </div>
+
+        {mode === 'workspace' && <div className={styles.paneHandle} onPointerDown={e => startPaneDrag('list', e)} />}
 
         {/* ── Reading pane ── */}
         <div className={styles.readPane}>
@@ -373,6 +502,14 @@ export default function EmailCenter({ mode = 'widget' }) {
                 <div className={styles.readActions}>
                   <button className={styles.readActionBtn} onClick={() => setReplyOpen(true)}>↩ Reply</button>
                   <button className={styles.readActionBtn} onClick={() => setForwardOpen(true)}>↪ Forward</button>
+                  <button className={styles.readActionBtn} onClick={() => mail.toggleStar(mail.selectedMessage.id, !mail.selectedMessage.starred, mail.selectedMessage.accountId)}>
+                    {mail.selectedMessage.starred ? '★ Starred' : '☆ Star'}
+                  </button>
+                  <button className={styles.readActionBtn} onClick={() => mail.toggleImportant(mail.selectedMessage.id, !mail.selectedMessage.important, mail.selectedMessage.accountId)}>
+                    {mail.selectedMessage.important ? 'Important' : 'Mark Important'}
+                  </button>
+                  <button className={styles.readActionBtn} onClick={() => mail.setSnooze(mail.selectedMessage.id, new Date(Date.now() + 86400000).toISOString())}>Snooze 1d</button>
+                  <button className={styles.readActionBtn} onClick={() => mail.setFollowUp(mail.selectedMessage.id, new Date(Date.now() + 86400000).toISOString())}>Follow Up</button>
                   <button className={styles.readActionBtn} onClick={() => mail.archiveMessage(mail.selectedMessage.id, mail.selectedMessage.accountId)}>Archive</button>
                   <button className={`${styles.readActionBtn} ${styles.readActionDanger}`} onClick={() => mail.deleteMessage(mail.selectedMessage.id, mail.selectedMessage.accountId)}>Delete</button>
                   <button className={styles.readActionBtn} onClick={() => mail.markRead(mail.selectedMessage.id, !mail.selectedMessage.read, mail.selectedMessage.accountId)}>

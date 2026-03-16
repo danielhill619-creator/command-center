@@ -19,6 +19,14 @@ function formatNumber(value) {
   return Number(value || 0).toLocaleString()
 }
 
+function getUsageShare(modelName, usageStats) {
+  const modelKey = modelName.replace('models/', '')
+  const total = Object.values(usageStats).reduce((sum, stats) => sum + Number(stats.requests || 0), 0)
+  const current = Number(usageStats[modelKey]?.requests || 0)
+  if (!total) return '0%'
+  return `${Math.round((current / total) * 100)}%`
+}
+
 function inferAvailability(stats) {
   const error = `${stats?.lastError || ''}`.toLowerCase()
   if (error.includes('quota') || error.includes('429')) return 'Exhausted'
@@ -143,8 +151,7 @@ export default function Settings() {
                   <div className={styles.modelMeta}>{model.name.replace('models/', '')}</div>
                 </div>
                 <div className={styles.modelFacts}>
-                  <span>{formatNumber(model.inputTokenLimit)} in</span>
-                  <span>{formatNumber(model.outputTokenLimit)} out</span>
+                  <span>{getUsageShare(model.name, usageStats)} of local usage</span>
                   <span>{(model.supportedGenerationMethods || []).join(', ')}</span>
                 </div>
               </div>
