@@ -1,6 +1,6 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { getAuth, GoogleAuthProvider, reauthenticateWithPopup, signInWithPopup } from 'firebase/auth'
-import { getFreshGoogleOAuthToken } from '../../shared/hooks/useAuth'
+import { getGoogleToken, storeGoogleToken } from '../gis-auth'
 
 const STORAGE_KEY = 'cc_email_provider_auth_v1'
 
@@ -84,10 +84,13 @@ export async function connectGoogleMailAccount(accountId) {
   const credential = GoogleAuthProvider.credentialFromResult(result)
   if (!credential?.accessToken) throw new Error('GOOGLE_TOKEN_FAILED')
 
+  // Store the new token in GIS so future refreshes are silent
+  storeGoogleToken(credential.accessToken)
+
   const record = upsertAccount(accountId, {
     provider: 'gmail',
     accessToken: credential.accessToken,
-    expiresAt: Date.now() + 3600 * 1000,
+    expiresAt: Date.now() + 55 * 60 * 1000,
     email: result.user.email,
     name: result.user.displayName,
     connected: true,
@@ -179,9 +182,9 @@ export async function ensureStoredProviderAuth(accountId, provider) {
     }
   }
 
-  // Gmail — use the centralised OAuth token refresh (silent re-auth + IDB fallback)
+  // Gmail — try GIS silent token refresh (no popup)
   try {
-    const fresh = await getFreshGoogleOAuthToken()
+    const fresh = await getGoogleToken({ interactive: false })
     if (fresh) {
       return upsertAccount(accountId, {
         accessToken: fresh,
@@ -192,7 +195,7 @@ export async function ensureStoredProviderAuth(accountId, provider) {
     }
   } catch {}
 
-  // Silent refresh failed — force reconnect
+  // GIS silent refresh failed — user must reconnect manually via Reconnect button
   return markStoredProviderAuthInvalid(accountId)
 }
 
@@ -209,18 +212,20 @@ export async function getLiveAccessToken(account) {
     return refreshed.accessToken
   }
 
-  // Gmail — use the centralised OAuth token refresh
+  // Gmail — use GIS token (silent refresh, no popup)
   if (account.provider === 'gmail') {
-    const fresh = await getFreshGoogleOAuthToken()
-    if (fresh) {
-      upsertAccount(account.id, {
-        accessToken: fresh,
-        expiresAt: Date.now() + 55 * 60 * 1000,
-        connected: true,
-        lastError: '',
-      })
-      return fresh
-    }
+    try {
+      const fresh = await getGoogleToken({ interactive: false })
+      if (fresh) {
+        upsertAccount(account.id, {
+          accessToken: fresh,
+          expiresAt: Date.now() + 55 * 60 * 1000,
+          connected: true,
+          lastError: '',
+        })
+        return fresh
+      }
+    } catch {}
   }
 
   return null

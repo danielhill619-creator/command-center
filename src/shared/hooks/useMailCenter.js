@@ -280,7 +280,18 @@ function useMailCenterState() {
     }
 
     const key = getCacheKey(targetAccountId, targetFolder, '')
-    const rows = cache.current.get(key) || []
+    let rows = cache.current.get(key)
+
+    // When the cache for this folder was just invalidated (e.g. after delete/archive),
+    // fall back to the live messages state so the badge reflects the optimistic update
+    if (rows === undefined &&
+        targetAccountId === accountId &&
+        targetFolder === folder &&
+        !query.trim()) {
+      rows = messages
+    }
+
+    rows = rows || []
     return {
       total: rows.length,
       unread: rows.filter(message => !message.read).length,
