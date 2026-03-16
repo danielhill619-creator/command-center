@@ -92,6 +92,7 @@ export default function EmailCenter({ mode = 'widget' }) {
   const [showSnoozed, setShowSnoozed] = useState(false)
   const [listScrollTop, setListScrollTop] = useState(0)
   const [listHeight, setListHeight] = useState(700)
+  const [nowTs, setNowTs] = useState(() => Date.now())
   const [paneSizes, setPaneSizes] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(PANE_STORAGE_KEY) || '{"nav":260,"list":420}')
@@ -109,7 +110,6 @@ export default function EmailCenter({ mode = 'widget' }) {
     () => mail.accounts.filter(account => account.authError),
     [mail.accounts]
   )
-  const nowTs = Date.now()
   const visibleMessages = useMemo(
     () => mail.messages.filter(message => {
       const snoozed = message.snoozedUntil && new Date(message.snoozedUntil).getTime() > nowTs
@@ -133,6 +133,7 @@ export default function EmailCenter({ mode = 'widget' }) {
   )
   const rowRefs = useRef(new Map())
   const messageListRef = useRef(null)
+  const visibleMessagesRef = useRef([])
 
   const totalRows = visibleMessages.length
   const startIndex = Math.max(0, Math.floor(listScrollTop / VIRTUAL_ROW_HEIGHT) - OVERSCAN_ROWS)
@@ -142,17 +143,26 @@ export default function EmailCenter({ mode = 'widget' }) {
   const bottomSpacer = Math.max(0, (totalRows - endIndex) * VIRTUAL_ROW_HEIGHT)
 
   useEffect(() => {
+    visibleMessagesRef.current = visibleMessages
+  }, [visibleMessages])
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTs(Date.now()), 60000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  useEffect(() => {
     if (!mail.selectedId) return
     const node = rowRefs.current.get(mail.selectedId)
     if (node) {
       node.scrollIntoView({ block: 'nearest' })
       return
     }
-    const index = visibleMessages.findIndex(message => message.id === mail.selectedId)
+    const index = visibleMessagesRef.current.findIndex(message => message.id === mail.selectedId)
     if (index >= 0 && messageListRef.current) {
       messageListRef.current.scrollTop = Math.max(0, index * VIRTUAL_ROW_HEIGHT - VIRTUAL_ROW_HEIGHT)
     }
-  }, [mail.selectedId, visibleMessages])
+  }, [mail.selectedId])
 
   useEffect(() => {
     if (!messageListRef.current) return
