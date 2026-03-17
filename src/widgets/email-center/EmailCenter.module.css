@@ -4,6 +4,8 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  min-width: 0;
+  container-type: inline-size;
   font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
   font-size: 13px;
 }
@@ -20,14 +22,77 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 200px 280px 1fr;
+  grid-template-columns: minmax(160px, 200px) minmax(240px, 280px) minmax(0, 1fr);
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
+.mobileReading {}
+
 .layoutWorkspace {
   grid-template-columns: 240px 8px 360px 8px 1fr;
+}
+
+.nav,
+.listCol,
+.readPane,
+.msgBody,
+.readMetaText,
+.listHeader,
+.listHeaderActions {
+  min-width: 0;
+}
+
+@container (max-width: 900px) {
+  .layout:not(.layoutWorkspace) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .layout:not(.layoutWorkspace) .nav {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    max-height: 36cqh;
+    overflow-y: auto;
+  }
+
+  .layout:not(.layoutWorkspace) .listCol {
+    border-right: none;
+    flex: 1;
+    min-height: 240px;
+  }
+
+  .layout:not(.layoutWorkspace) .readPane {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .layout.mobileReading:not(.layoutWorkspace) .nav,
+  .layout.mobileReading:not(.layoutWorkspace) .listCol {
+    display: none;
+  }
+
+  .layout.mobileReading:not(.layoutWorkspace) .readPane {
+    display: flex;
+  }
+
+  .layout:not(.layoutWorkspace) .mobileBackBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #62b0f5;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 10px 14px 4px;
+  }
 }
 
 /* ── Mobile single-panel layout ── */

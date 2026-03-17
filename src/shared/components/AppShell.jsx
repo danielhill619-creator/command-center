@@ -5,6 +5,8 @@ import { auth } from '../../firebase'
 import { useAuth } from '../hooks/useAuth'
 import styles from './AppShell.module.css'
 
+const BUILD_LABEL = 'build CeKuid5u'
+
 const PRIMARY_LINKS = [
   { to: '/homebase', label: 'Home Base', icon: '⌂', color: '#7ce4ff' },
   { to: '/mail', label: 'Mail', icon: '✉', color: '#8cffb7' },
@@ -104,6 +106,7 @@ export default function AppShell() {
         </nav>
 
         <div className={styles.sidebarBottom}>
+          <div className={`${styles.buildStamp} ${sidebarOpen ? styles.buildStampVisible : ''}`}>{BUILD_LABEL}</div>
           {user && (
             <button type="button" className={styles.signOutBtn} onClick={handleSignOut}>
               <span className={styles.navIcon} aria-hidden="true">⎋</span>
@@ -114,6 +117,7 @@ export default function AppShell() {
       </aside>
 
       <div className={styles.content}>
+        <div className={styles.liveBadge}>{BUILD_LABEL}</div>
         <Outlet />
       </div>
     </div>

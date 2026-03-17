@@ -12,8 +12,12 @@ const DEFAULT_GEMINI_MODEL = 'gemini-3.1-flash-lite-preview'
 const GEMINI_USAGE_EVENT = 'cc:gemini-usage-updated'
 const GEMINI_MODEL_EVENT = 'cc:gemini-model-updated'
 
+function normalizeModelName(model) {
+  return `${typeof model === 'string' ? model : model?.name || ''}`.replace(/^models\//, '')
+}
+
 function isToolCapableModel(model) {
-  const name = (typeof model === 'string' ? model : model?.name || '').replace('models/', '')
+  const name = normalizeModelName(model)
   if (!name) return false
   // Exclude non-generative models regardless of family
   if (/tts|image|embedding|robotics|nano-banana/i.test(name)) return false
@@ -28,12 +32,12 @@ function isToolCapableModel(model) {
  * Gemma models support generateContent but NOT tool declarations via the Gemini API.
  */
 export function currentModelSupportsTools() {
-  const name = getGeminiModel()
+  const name = normalizeModelName(getGeminiModel())
   return !/^gemma/i.test(name)
 }
 
 function getGeminiModel() {
-  return localStorage.getItem(MODEL_STORAGE_KEY) || DEFAULT_GEMINI_MODEL
+  return normalizeModelName(localStorage.getItem(MODEL_STORAGE_KEY) || DEFAULT_GEMINI_MODEL)
 }
 
 export function getSelectedGeminiModel() {
@@ -48,6 +52,42 @@ export function setSelectedGeminiModel(model) {
 
 function getGeminiBase() {
   return `https://generativelanguage.googleapis.com/v1beta/models/${getGeminiModel()}:generateContent`
+}
+
+function modelSupportsDeveloperInstruction() {
+  return currentModelSupportsTools()
+}
+
+function buildBodyWithModelCompatibility(systemPrompt, contents, generationConfig) {
+  if (modelSupportsDeveloperInstruction()) {
+    return {
+      system_instruction: {
+        parts: [{ text: systemPrompt }],
+      },
+      contents,
+      generationConfig,
+    }
+  }
+
+  const mergedContents = [...contents]
+  const first = mergedContents[0]
+  const firstText = first?.parts?.map(part => part.text ?? '').join('') || ''
+  const prefix = `Instructions:\n${systemPrompt}\n\n`
+
+  if (first) {
+    mergedContents[0] = {
+      ...first,
+      role: 'user',
+      parts: [{ text: `${prefix}${firstText}` }],
+    }
+  } else {
+    mergedContents.push({ role: 'user', parts: [{ text: prefix.trim() }] })
+  }
+
+  return {
+    contents: mergedContents,
+    generationConfig,
+  }
 }
 
 function readUsageStore() {
@@ -171,21 +211,19 @@ export async function sendMessage(systemPrompt, userMessage, options = {}) {
 
   const { temperature = 0.7, maxTokens = 1024 } = options
 
-  const body = {
-    system_instruction: {
-      parts: [{ text: systemPrompt }],
-    },
-    contents: [
+  const body = buildBodyWithModelCompatibility(
+    systemPrompt,
+    [
       {
         role: 'user',
         parts: [{ text: userMessage }],
       },
     ],
-    generationConfig: {
+    {
       temperature,
       maxOutputTokens: maxTokens,
     },
-  }
+  )
 
   const res = await fetch(`${getGeminiBase()}?key=${apiKey}`, {
     method: 'POST',
@@ -228,10 +266,8 @@ export async function sendWithTools(systemPrompt, history, tools, executeTool) {
 
   for (let round = 0; round < 8; round++) {
     const body = {
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents,
+      ...buildBodyWithModelCompatibility(systemPrompt, contents, { temperature: 0.2, maxOutputTokens: 2048 }),
       tools: [{ functionDeclarations: tools }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 2048 },
     }
 
     const res = await fetch(`${getGeminiBase()}?key=${apiKey}`, {
@@ -283,19 +319,17 @@ export async function sendConversation(systemPrompt, history) {
     throw new Error('GEMINI_NO_KEY')
   }
 
-  const body = {
-    system_instruction: {
-      parts: [{ text: systemPrompt }],
-    },
-    contents: history.map(turn => ({
+  const body = buildBodyWithModelCompatibility(
+    systemPrompt,
+    history.map(turn => ({
       role: turn.role,
       parts: [{ text: turn.text }],
     })),
-    generationConfig: {
+    {
       temperature: 0.8,
       maxOutputTokens: 1024,
     },
-  }
+  )
 
   const res = await fetch(`${getGeminiBase()}?key=${apiKey}`, {
     method: 'POST',

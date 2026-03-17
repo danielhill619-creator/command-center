@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useAuth } from './useAuth'
-import { sendWithTools } from '../../integrations/gemini-api/geminiService'
+import { currentModelSupportsTools, sendConversation, sendWithTools } from '../../integrations/gemini-api/geminiService'
 import { appendConversation, buildFullContext } from '../../integrations/ai-memory/aiMemoryService'
 import { buildRuntimeAppContext } from '../../integrations/gemini-api/appContext'
 import { createEmailToolExecutor, emailToolDeclarations } from '../../integrations/gemini-api/emailTools'
@@ -45,7 +45,9 @@ export function useEmailAI(mail) {
       ].filter(Boolean).join('\n\n')
 
       const history = [...chatHistory, userTurn].map(turn => ({ role: turn.role, text: turn.text }))
-      const response = await sendWithTools(systemPrompt, history, emailToolDeclarations, executeTool)
+      const response = currentModelSupportsTools()
+        ? await sendWithTools(systemPrompt, history, emailToolDeclarations, executeTool)
+        : await sendConversation(`${systemPrompt}\n\n=== LIVE MAILBOX SNAPSHOT ===\n${buildEmailContextText(mail)}`, history)
 
       const assistantTurn = { role: 'model', text: response }
       setChatHistory(prev => [...prev, assistantTurn])
@@ -73,4 +75,15 @@ export function useEmailAI(mail) {
     chatLoading,
     ask,
   }
+}
+
+function buildEmailContextText(mail) {
+  if (!mail?.messages?.length) return 'No live messages loaded.'
+  const recent = mail.messages.slice(0, 20)
+  return [
+    `Accounts: ${(mail.accounts || []).map(a => a.address || a.label).join(', ')}`,
+    `Folder: ${mail.folder || 'Inbox'}`,
+    `Recent messages (${recent.length}):`,
+    ...recent.map((m, i) => `${i + 1}. ${m.folder} | From: ${m.from} | Subject: ${m.subject}${m.read ? '' : ' [UNREAD]'} | ${new Date(m.receivedAt).toLocaleString()}`),
+  ].join('\n')
 }

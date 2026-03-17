@@ -13,6 +13,15 @@ function snap(value) {
   return Math.round(value / GRID) * GRID
 }
 
+function clampLayoutToWidth(layout, width) {
+  return Object.fromEntries(Object.entries(layout).map(([key, item]) => {
+    const minW = item.minW || 180
+    const safeWidth = Math.max(minW, Math.min(item.w, width))
+    const safeX = Math.max(0, Math.min(item.x, Math.max(0, width - safeWidth)))
+    return [key, { ...item, w: safeWidth, x: safeX }]
+  }))
+}
+
 const DEFAULT_LAYOUT = {
   mail:    { x: 0,   y: 0,   w: 960, h: 480, minW: 576, minH: 420, title: 'MAIL CENTER' },
   news:    { x: 0,   y: 504, w: 432, h: 240, minW: 384, minH: 240, title: 'NEWS FEED' },
@@ -52,7 +61,7 @@ const MOBILE_CARD_ORDER = ['news', 'mail', 'weather', 'system']
 export default function HomeDashboard() {
   const [layout, setLayout] = useState(loadLayout)
   const [arrangeMode, setArrangeMode] = useState(false)
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 980)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1320)
   const canvasRef = useRef(null)
   const dragRef = useRef(null)
 
@@ -89,8 +98,16 @@ export default function HomeDashboard() {
   }
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 980)
+    const onResize = () => {
+      const nextMobile = window.innerWidth < 1320
+      setIsMobile(nextMobile)
+      if (!nextMobile) {
+        const width = Math.max(720, window.innerWidth - 180)
+        setLayout(prev => clampLayoutToWidth(prev, width))
+      }
+    }
     window.addEventListener('resize', onResize)
+    onResize()
     return () => window.removeEventListener('resize', onResize)
   }, [])
 

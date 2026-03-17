@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from 'react'
+import { useState, useEffect, createContext, useContext, useRef } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../../firebase'
 import { setAccessToken } from '../../integrations/google-sheets/sheetsService'
@@ -25,23 +25,40 @@ async function initInBackground(currentUser, setSheetIds, setSheetsReady) {
 }
 
 export function AuthProvider({ children }) {
-  // auth.currentUser is populated synchronously from localStorage on Firebase init.
-  // Using it for initial state means ProtectedRoute never blocks on loading=true
-  // when the user is already signed in.
   const [user, setUser]               = useState(auth.currentUser)
   const [loading, setLoading]         = useState(!auth.currentUser)
   const [sheetIds, setSheetIds]       = useState(() => getCachedSheetIds())
   const [sheetsReady, setSheetsReady] = useState(false)
+  const readyRef = useRef(false)
 
   useEffect(() => {
-    // Immediately kick off background init if we already have a user
-    if (auth.currentUser) {
-      initInBackground(auth.currentUser, setSheetIds, setSheetsReady)
-    }
+    let active = true
+
+    auth.authStateReady()
+      .then(() => {
+        if (!active) return
+        readyRef.current = true
+        const currentUser = auth.currentUser
+        setUser(currentUser)
+        setLoading(false)
+
+        if (currentUser) {
+          initInBackground(currentUser, setSheetIds, setSheetsReady)
+        } else {
+          setSheetIds(null)
+          setSheetsReady(false)
+          clearGoogleToken()
+        }
+      })
+      .catch(() => {
+        if (!active) return
+        readyRef.current = true
+        setLoading(false)
+      })
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!active || !readyRef.current) return
       setUser(currentUser)
-      setLoading(false)
 
       if (currentUser) {
         initInBackground(currentUser, setSheetIds, setSheetsReady)
@@ -52,7 +69,10 @@ export function AuthProvider({ children }) {
       }
     })
 
-    return () => unsubscribe()
+    return () => {
+      active = false
+      unsubscribe()
+    }
   }, [])
 
   return (
