@@ -45,7 +45,7 @@ async function fetchFeedViaJson(feed) {
   return (data.items || []).slice(0, 5).map(item => ({
     title: item.title || feed.label,
     link: item.link,
-    pub: item.pubDate || new Date().toUTCString(),
+    pub: normalizePubDate(item.pubDate) || new Date().toISOString(),
     thumbnail: item.thumbnail || item.enclosure?.link || null,
     source: data.feed?.title || feed.label,
   })).filter(item => item.link)
@@ -63,10 +63,19 @@ async function fetchFeedViaXml(feed) {
   return [...doc.querySelectorAll('item')].slice(0, 6).map(item => ({
     title: textAt(item, 'title') || feed.label,
     link: textAt(item, 'link'),
-    pub: textAt(item, 'pubDate') || new Date().toUTCString(),
+    pub: normalizePubDate(textAt(item, 'pubDate')) || new Date().toISOString(),
     thumbnail: getThumbnail(item),
     source: textAt(item, 'source') || feed.label,
   })).filter(item => item.link)
+}
+
+function normalizePubDate(value) {
+  if (!value) return ''
+  const trimmed = `${value}`.trim()
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+    return trimmed.replace(' ', 'T') + 'Z'
+  }
+  return trimmed
 }
 
 function textAt(node, selector) {
@@ -157,42 +166,34 @@ function extractRealUrl(link) {
   return link
 }
 
+function getDomainFavicon(url) {
+  try {
+    const domain = new URL(url).hostname
+    return `https://www.google.com/s2/favicons?sz=64&domain=${domain}`
+  } catch {
+    return null
+  }
+}
+
 async function hydrateHeadlines(items) {
   const enriched = await Promise.allSettled(items.map(async item => {
     const realUrl = extractRealUrl(item.link)
     if (item.thumbnail) return { ...item, link: realUrl }
     try {
       const res = await fetch(`${MICROLINK}${encodeURIComponent(realUrl)}`, { signal: AbortSignal.timeout(5000) })
-      if (!res.ok) return { ...item, link: realUrl, thumbnail: sourceFavicon(realUrl) }
-      const json = await res.json()
-      return {
-        ...item,
-        link: realUrl,
-        thumbnail: json.data?.image?.url || sourceFavicon(realUrl),
-        source: json.data?.publisher || item.source,
+      if (res.ok) {
+        const json = await res.json()
+        const thumb = json.data?.image?.url || json.data?.logo?.url || null
+        if (thumb) return { ...item, link: realUrl, thumbnail: thumb, source: json.data?.publisher || item.source }
       }
-    } catch {
-      return { ...item, link: realUrl, thumbnail: sourceFavicon(realUrl) }
-    }
+    } catch { /* fall through */ }
+    // Guaranteed fallback: domain favicon
+    return { ...item, link: realUrl, thumbnail: getDomainFavicon(realUrl) }
   }))
   return enriched.map(r => r.status === 'fulfilled' ? r.value : r.reason)
 }
 
-function withSourceFallback(item) {
-  return {
-    ...item,
-    thumbnail: sourceFavicon(item.link),
-  }
-}
 
-function sourceFavicon(link) {
-  try {
-    const host = new URL(link).hostname
-    return `https://www.google.com/s2/favicons?domain=${host}&sz=128`
-  } catch {
-    return null
-  }
-}
 
 export default function useHeadlines() {
   const [headlines, setHeadlines] = useState(() => getCachedHeadlines() ?? [])
